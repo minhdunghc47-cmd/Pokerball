@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LCL Cloud Pro v4.6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(51, 65, 85, 0.5); }
+        .tab-active { background: #ea580c !important; color: white !important; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3); }
+        .btn-press:active { transform: scale(0.95); }
+        input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; }
+        .modal.active { display: flex; animation: fadeIn 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        #loadingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .spinner { border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: #ea580c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-24">
+
+    <div id="loadingOverlay">
+        <div class="spinner mb-4"></div>
+        <div id="loadingText" class="text-orange-500 font-bold tracking-widest text-sm uppercase">Đang xử lý dữ liệu...</div>
+    </div>
+
+    <nav class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4">
+        <div class="max-w-xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-orange-600 p-2 rounded-xl shadow-lg shadow-orange-900/20">
+                    <i class="ph-fill ph-fire text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-black italic text-sm tracking-tighter uppercase">LCL <span class="text-orange-500">PRO v4.6</span></h1>
+                    <div class="flex items-center gap-1.5">
+                        <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest" id="cloud-status">Đang đồng bộ...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="openModal('modalStats')" class="bg-slate-800 p-2 rounded-lg text-emerald-400 border border-slate-700 btn-press">
+                    <i class="ph-bold ph-chart-bar-horizontal"></i>
+                </button>
+                <button onclick="openModal('modalHistory')" class="bg-slate-800 p-2 rounded-lg text-blue-400 border border-slate-700 btn-press">
+                    <i class="ph-bold ph-clock-counter-clockwise"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto p-4">
+        <div id="view-players" class="space-y-4">
+            <div id="add-player-row" class="flex gap-2">
+                <input type="text" id="inputName" placeholder="Thêm người chơi..." class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-4 font-bold text-sm outline-none focus:border-orange-500">
+                <button onclick="addPlayer()" class="bg-orange-600 px-6 rounded-2xl font-black text-white shadow-lg btn-press text-xl">+</button>
+            </div>
+            <div id="playerList" class="space-y-3"></div>
+        </div>
+
+        <div id="view-summary" class="hidden space-y-4 animate-in fade-in duration-300">
+            <div class="glass-card rounded-[2rem] p-6 border-l-4 border-orange-500 shadow-2xl" id="prizeStats"></div>
+            <div class="glass-card rounded-[2rem] p-6 border-l-4 border-emerald-500">
+                <h2 class="text-xs font-black text-emerald-500 uppercase tracking-widest mb-6">Bảng thanh toán trận này</h2>
+                <div id="payList" class="space-y-2"></div>
+                <button id="btn-save-match" onclick="saveMatch()" class="w-full mt-8 bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-xl btn-press flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                    <i class="ph-bold ph-check-circle text-lg"></i> Chốt & Lưu Lịch Sử
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-6 left-6 right-6 bg-slate-900/95 border border-slate-700 p-1.5 rounded-[2rem] flex shadow-2xl max-w-xl mx-auto z-40">
+        <button id="tab1" onclick="switchTab('players')" class="flex-1 py-4 rounded-[1.8rem] font-black text-[10px] uppercase flex flex-col items-center gap-1 tab-active transition-all">
+            <i class="ph-bold ph-users text-lg"></i> Bàn chơi
+        </button>
+        <button id="tab2" onclick="switchTab('summary')" class="flex-1 py-4 rounded-[1.8rem] font-black text-[10px] uppercase flex flex-col items-center gap-1 text-slate-500 transition-all">
+            <i class="ph-bold ph-calculator text-lg"></i> Tính tiền
+        </button>
+    </div>
+
+    <div id="modalHistory" class="modal">
+        <div class="flex items-center justify-between p-6 border-b border-slate-800">
+            <h2 class="text-blue-400 font-black uppercase tracking-widest text-sm">Lịch sử chi tiết Tour</h2>
+            <button onclick="closeModal('modalHistory')" class="text-slate-500 text-3xl">&times;</button>
+        </div>
+        <div id="historyList" class="flex-1 overflow-y-auto p-4 space-y-4 pb-20"></div>
+    </div>
+
+    <div id="modalStats" class="modal">
+        <div class="flex flex-col p-6 border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur-md">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-emerald-400 font-black uppercase tracking-widest text-sm">Bảng Vàng Thành Tích</h2>
+                <button onclick="closeModal('modalStats')" class="text-slate-500 text-3xl">&times;</button>
+            </div>
+            <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                    <label class="text-[9px] text-slate-400 font-bold uppercase mb-1 block">Từ ngày</label>
+                    <input type="date" id="filterStartDate" onchange="renderStats()" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-orange-500">
+                </div>
+                <div class="flex-1">
+                    <label class="text-[9px] text-slate-400 font-bold uppercase mb-1 block">Đến ngày</label>
+                    <input type="date" id="filterEndDate" onchange="renderStats()" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-orange-500">
+                </div>
+                <button onclick="document.getElementById('filterStartDate').value=''; document.getElementById('filterEndDate').value=''; renderStats()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors">Tất cả</button>
+            </div>
+        </div>
+        <div id="statsContent" class="flex-1 overflow-y-auto p-4 space-y-6 pb-24"></div>
+    </div>
+
+    <div id="customDialog" class="fixed inset-0 bg-black/80 z-[200] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-700 rounded-[2rem] p-8 w-full max-w-sm text-center shadow-2xl">
+            <h3 id="diagTitle" class="text-white font-black text-lg mb-2"></h3>
+            <p id="diagMsg" class="text-slate-400 text-sm mb-6 leading-relaxed"></p>
+            <input type="text" id="diagInput" class="hidden w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white mb-6 text-center text-sm outline-none focus:border-orange-500">
+            <div class="flex gap-3">
+                <button id="btnCancel" onclick="closeDialog(false)" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-slate-400 text-xs">HỦY</button>
+                <button onclick="closeDialog(true)" class="flex-1 py-4 bg-orange-600 rounded-2xl font-black text-white text-xs">ĐỒNG Ý</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CFG = { BUYIN: 60000, TOUR: 50000, BTY: 10000, ADDON: 50000, RATE: 0.5, PRIZES: [0.25, 0.15, 0.1] };
+        
+        // MẢNG BIỆT DANH MỚI (Dùng ngoặc kép thông minh “ ” để an toàn tuyệt đối cho code HTML)
+        const DEFAULTS = ['Đại Ka “C”', 'Nhị ka “Y”', 'Tam ka “G”', 'Tứ ka “H”', 'Ngũ ka “T”', 'Lục ka “Q”', 'Cốc', 'Ly'];
+        
+        // TỪ ĐIỂN DỊCH THUẬT (Không sửa data gốc, chỉ dịch khi hiển thị)
+        const MIGRATION_MAP = {
+            'Cảnh': 'Đại Ka “C”',
+            'Yên': 'Nhị ka “Y”',
+            'Giang': 'Tam ka “G”',
+            'Hải': 'Tứ ka “H”',
+            'Trung': 'Ngũ ka “T”',
+            'Quân': 'Lục ka “Q”',
+            'Dũng': 'Cốc',
+            'Hoàng': 'Ly'
+        };
+
+        // Hàm Dịch Tên
+        function getDisplayName(oldName) {
+            return MIGRATION_MAP[oldName] || oldName;
+        }
+
+        const FIREBASE_URL = 'https://lcl-v1-default-rtdb.asia-southeast1.firebasedatabase.app';
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycby6SNzRM-CCaiyGwCzs3JH53GjzBfFa5fsZqpxILtC9MYjSaUXmaGhouZUM6aq2EqnT/exec';
+
+        let state = JSON.parse(localStorage.getItem('LCL_V4_DATA')) || {
+            players: DEFAULTS.map((n, i) => ({ id: i, name: n, buy: 0, add: 0, bty: 0, rank: 0, paid: false })),
+            history: [], expenses: []
+        };
+        if(!state.incomes) state.incomes = [];
+        if(!state.extraDebts) state.extraDebts = [];
+
+        if(state.history) state.history.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0));
+        let lastHash = JSON.stringify(state);
+
+        async function pullCloud() {
+            try {
+                let res = await fetch(`${FIREBASE_URL}/lcl_state.json`);
+                if(res.ok) {
+                    let data = await res.json();
+                    if(data && data.rawText && data.rawText !== lastHash) {
+                        lastHash = data.rawText;
+                        state = JSON.parse(data.rawText);
+                        
+                        if(!state.incomes) state.incomes = [];
+                        if(!state.extraDebts) state.extraDebts = [];
+                        if(state.history) state.history.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0));
+                        
+                        localStorage.setItem('LCL_V4_DATA', data.rawText);
+                        
+                        render();
+                        if(document.getElementById('modalStats').classList.contains('active')) renderStats();
+                        if(document.getElementById('modalHistory').classList.contains('active')) renderHistory();
+                    }
+                }
+                document.getElementById('cloud-status').innerText = 'Cloud Synced ✅';
+            } catch(e) {
+                document.getElementById('cloud-status').innerText = 'Offline Mode ⚠️';
+            }
+        }
+
+        function sync() {
+            let text = JSON.stringify(state);
+            lastHash = text;
+            localStorage.setItem('LCL_V4_DATA', text);
+            render();
+            
+            fetch(`${FIREBASE_URL}/lcl_state.json`, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rawText: text }) 
+            })
+            .then(() => document.getElementById('cloud-status').innerText = 'Cloud Synced ✅')
+            .catch(() => document.getElementById('cloud-status').innerText = 'Offline Mode ⚠️');
+        }
+
+        render(); 
+        pullCloud();
+        setInterval(pullCloud, 5000);
+
+        function addPlayer() {
+            const n = document.getElementById('inputName').value.trim();
+            if(!n) return;
+            state.players.push({ id: Date.now(), name: n, buy: 0, add: 0, bty: 0, rank: 0, paid: false });
+            document.getElementById('inputName').value = ''; sync();
+        }
+
+        function upd(id, f, v) { const p = state.players.find(x => x.id === id); p[f] = Math.max(0, p[f] + v); sync(); }
+        function setR(id, r) { state.players.forEach(p => p.rank = (p.id === id && p.rank !== r) ? r : (p.rank === r ? 0 : p.rank)); sync(); }
+
+        function render() {
+            document.getElementById('playerList').innerHTML = state.players.map(p => `
+                <div class="glass-card rounded-2xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${p.rank==1?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30':p.rank==2?'bg-slate-300 text-black':p.rank==3?'bg-orange-800 text-white':'bg-slate-800 text-slate-500'}">${p.rank||'#'}</div>
+                            <span class="font-black text-slate-100">${getDisplayName(p.name)}</span>
+                        </div>
+                        <button onclick="confirmAction('Xóa người chơi?','Xóa ${getDisplayName(p.name)} khỏi bàn?',()=>{state.players=state.players.filter(x=>x.id!=${p.id});sync();})" class="text-slate-600 hover:text-red-500 p-2"><i class="ph-bold ph-x text-lg"></i></button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        ${[1,2,3].map(r => `<button onclick="setR(${p.id},${r})" class="py-2 rounded-xl text-[10px] font-black border transition-all ${p.rank==r?'bg-slate-200 text-black border-white shadow-md':'bg-slate-900 text-slate-500 border-slate-800'}">GIẢI ${r}</button>`).join('')}
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        ${[['buy','B-IN','text-orange-500'],['add','A-ON','text-blue-400'],['bty','BTY','text-emerald-400']].map(([f,l,c]) => `
+                            <div class="bg-slate-950/50 p-2 rounded-2xl border border-slate-800 flex flex-col items-center">
+                                <span class="text-[8px] font-black text-slate-600 uppercase mb-1">${l}</span>
+                                <div class="flex items-center justify-between w-full">
+                                    <button onclick="upd(${p.id},'${f}',-1)" class="text-slate-500 font-bold px-2 btn-press">−</button>
+                                    <span class="font-black ${c} text-lg">${p[f]}</span>
+                                    <button onclick="upd(${p.id},'${f}',1)" class="text-slate-200 font-bold px-2 btn-press">+</button>
+                                </div>
+                            </div>`).join('')}
+                    </div>
+                </div>`).join('');
+
+            let b=0, a=0; state.players.forEach(p=>{b+=p.buy; a+=p.add;});
+            let total = (b+a)*CFG.TOUR, fund = total*CFG.RATE, pp = total-fund, pz = CFG.PRIZES.map(v=>total*v);
+            document.getElementById('prizeStats').innerHTML = `<div class="flex justify-between items-end mb-4 pb-4 border-b border-slate-800/50"><span class="text-[10px] font-black text-slate-500 uppercase">TỔNG THƯỞNG</span><span class="text-2xl font-black text-orange-500">${fmt(pp)}</span></div><div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase"><span>TRÍCH QUỸ</span><span class="text-base font-black">+${fmt(fund)}</span></div>`;
+            
+            const active = state.players.filter(p=>p.buy>0);
+            document.getElementById('payList').innerHTML = active.map(p => {
+                let cost = (p.buy*CFG.BUYIN)+(p.add*CFG.ADDON), bty = p.bty*CFG.BTY, pr = p.rank>0?pz[p.rank-1]:0, fin = pr+bty-cost;
+                return `
+                <div class="flex justify-between items-center py-3 border-b border-slate-800/50 last:border-0">
+                    <div>
+                        <div class="text-sm font-black text-slate-200 mb-1">${getDisplayName(p.name)}</div>
+                        <button onclick="const x=state.players.find(y=>y.id==${p.id}); x.paid=!x.paid; sync();" class="text-[9px] font-black px-2 py-1 rounded-lg border btn-press transition-colors ${p.paid?'bg-emerald-500/20 text-emerald-400 border-emerald-500/50':'bg-slate-800 text-slate-500 border-slate-700'}">${p.paid ? '✅ ĐÃ TT' : '❌ CHƯA TT'}</button>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-base font-black ${fin>=0?'text-emerald-400':'text-red-500'}">${fin>0?'+':''}${fmt(fin)}</div>
+                        <div class="text-[8px] font-bold text-slate-600 uppercase mt-1">Vốn: ${fmt(cost)}</div>
+                    </div>
+                </div>`;
+            }).join('') || '<p class="text-center py-10 text-slate-700 italic text-xs">Bàn trống...</p>';
+        }
+
+        function saveMatch() {
+            let tb=0; state.players.forEach(p=>tb+=p.buy);
+            if(tb === 0) { customAlert("Lỗi", "Bàn chưa có Buy-in!"); return; }
+            
+            confirmAction("Chốt trận?", "Lưu kết quả và làm mới bàn chơi?", () => {
+                let b=0, a=0, bty=0; 
+                state.players.forEach(p=>{b+=p.buy; a+=p.add; bty+=p.bty; });
+                let total = (b+a)*CFG.TOUR, pz = CFG.PRIZES.map(v=>total*v);
+                let prizePool = total - (total * CFG.RATE);
+
+                const snapshot = state.players.filter(p=>p.buy > 0).map(p => {
+                    let cost = (p.buy*CFG.BUYIN)+(p.add*CFG.ADDON), btyEarned = p.bty*CFG.BTY, pr = p.rank>0?pz[p.rank-1]:0;
+                    return { ...p, final: pr+btyEarned-cost };
+                });
+
+                let maxMatch = state.history.length > 0 ? Math.max(...state.history.map(m => m.matchNumber || 0)) : 0;
+                const nextNum = maxMatch + 1;
+
+                state.history.push({ 
+                    id: Date.now(), 
+                    matchNumber: nextNum,
+                    date: new Date().toLocaleString('vi-VN'), 
+                    fund: total*CFG.RATE,
+                    prizePool: prizePool,
+                    prizes: pz, 
+                    tB: b, tA: a, tBty: bty,
+                    players: snapshot 
+                });
+
+                state.history.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0));
+
+                state.players = DEFAULTS.map((n, i) => ({ id: Date.now()+i, name: n, buy: 0, add: 0, bty: 0, rank: 0, paid: false }));
+                sync(); 
+                syncToGoogleSheets(true); 
+                switchTab('players');
+            });
+        }
+
+        function editMatch(id) {
+            confirmAction("Sửa TOUR?", "Khôi phục dữ liệu TOUR này ra bàn để sửa? Dữ liệu bàn hiện tại sẽ bị xóa trắng.", () => {
+                const idx = state.history.findIndex(m => m.id === id);
+                if(idx > -1) {
+                    state.players = state.history[idx].players.map(p => ({...p}));
+                    state.history.splice(idx, 1);
+                    sync();
+                    closeModal('modalHistory');
+                    switchTab('players');
+                }
+            });
+        }
+
+        function editTourNum(id, currentVal) {
+            customPrompt("Sửa số Tour", "Nhập số Tour mới (Ví dụ: 5, 6, 7...):", currentVal, (val) => {
+                let newNum = parseInt(val.trim());
+                if (isNaN(newNum) || newNum <= 0) {
+                    customAlert("Lỗi", "Số tour không hợp lệ! Vui lòng nhập số.");
+                    return;
+                }
+                
+                if (state.history.some(x => x.matchNumber === newNum && x.id !== id)) {
+                    customAlert("Lỗi", "Trùng lặp! Số Tour " + newNum + " đã tồn tại, hãy chọn số khác.");
+                    return;
+                }
+
+                let m = state.history.find(x => x.id === id);
+                if(m) { 
+                    m.matchNumber = newNum; 
+                    state.history.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0));
+                    sync(); 
+                    renderHistory(); 
+                }
+            });
+        }
+
+        function editTourDate(id, currentVal) {
+            customPrompt("Sửa Ngày/Giờ", "Nhập thời gian (Ví dụ: 10:30 15/08/2023):", currentVal, (val) => {
+                let m = state.history.find(x => x.id === id);
+                if(m && val.trim() !== '') { m.date = val.trim(); sync(); renderHistory(); }
+            });
+        }
+
+        function parseDateStr(dateStr) {
+            if(!dateStr) return 0;
+            let parts = dateStr.split(' ');
+            let datePart = parts.length > 1 ? parts[1] : parts[0];
+            let dmy = datePart.split('/');
+            if(dmy.length >= 3) {
+                return new Date(parseInt(dmy[2]), parseInt(dmy[1])-1, parseInt(dmy[0])).getTime();
+            }
+            let fb = new Date(dateStr).getTime();
+            return isNaN(fb) ? 0 : fb;
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '';
+            let d = new Date(ts);
+            return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            if(!state.history.length) { container.innerHTML = '<div class="text-center py-20 text-slate-600 italic">Chưa có lịch sử thi đấu.</div>'; return; }
+            
+            container.innerHTML = [...state.history].reverse().map((h, i) => {
+                let tB = h.tB, tA = h.tA, tBty = h.tBty, pPool = h.prizePool;
+                if(tB === undefined) {
+                    tB = 0; tA = 0; tBty = 0;
+                    h.players.forEach(p => { tB += p.buy; tA += p.add; tBty += p.bty; });
+                    pPool = (tB + tA) * CFG.TOUR * (1 - CFG.RATE);
+                }
+                let pz = h.prizes || CFG.PRIZES.map(r => pPool * r);
+
+                return `
+                <div class="glass-card rounded-2xl p-4 border-l-4 border-blue-500 mb-6 shadow-xl">
+                    <div class="flex justify-between border-b border-slate-800 pb-3 mb-3 items-center">
+                        <div>
+                            <span onclick="editTourNum(${h.id}, '${h.matchNumber || 0}')" class="font-black text-blue-400 text-sm uppercase tracking-widest cursor-pointer underline decoration-blue-400/30 underline-offset-4 active:opacity-50">TOUR ${h.matchNumber || 0} <i class="ph-bold ph-pencil-simple text-xs"></i></span>
+                            <div onclick="editTourDate(${h.id}, '${h.date}')" class="text-[9px] text-slate-500 font-bold mt-1 cursor-pointer active:opacity-50">${h.date} <i class="ph-bold ph-pencil-simple"></i></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editMatch(${h.id})" class="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-lg border border-slate-700 transition-colors"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
+                            <button onclick="confirmAction('Xóa?','Xóa vĩnh viễn trận này?',()=>{state.history=state.history.filter(x=>x.id!=${h.id});sync();renderHistory();})" class="text-slate-400 hover:text-red-500 bg-slate-800 p-2 rounded-lg border border-slate-700 transition-colors"><i class="ph-bold ph-trash text-lg"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between bg-slate-900/70 border border-slate-800/50 p-4 rounded-xl mb-4 text-[10px] font-bold tracking-widest shadow-inner">
+                        <div class="flex flex-col gap-2">
+                            <span class="text-slate-500 uppercase">Tổng Vốn: <span class="text-white text-xs">${tB}B | ${tA}A</span></span>
+                            <span class="text-slate-500 uppercase">Bounty: <span class="text-emerald-400 text-xs">${tBty} Kills</span></span>
+                            <span class="text-slate-500 uppercase">Trích Quỹ: <span class="text-emerald-400 text-xs">+${fmt(h.fund)}</span></span>
+                        </div>
+                        <div class="flex flex-col gap-2 text-right">
+                            <span class="text-slate-500 uppercase">Prize Pool: <span class="text-orange-400 text-xs">${fmt(pPool)}</span></span>
+                            <span class="text-slate-400 uppercase">G1 (25%): <span class="text-yellow-500 text-xs">${fmt(pz[0])}</span></span>
+                            <span class="text-slate-400 uppercase">G2 (15%): <span class="text-slate-200 text-xs">${fmt(pz[1])}</span></span>
+                            <span class="text-slate-400 uppercase">G3 (10%): <span class="text-orange-700 text-xs">${fmt(pz[2])}</span></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        ${h.players.map(p => {
+                            let rankBadge = '';
+                            if(p.rank === 1) rankBadge = '<span class="bg-yellow-500 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 shadow-md font-black">NHẤT</span>';
+                            if(p.rank === 2) rankBadge = '<span class="bg-slate-300 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">NHÌ</span>';
+                            if(p.rank === 3) rankBadge = '<span class="bg-orange-800 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">BA</span>';
+                            
+                            return `
+                            <div class="flex justify-between text-xs items-center py-2 border-b border-slate-800/30 last:border-0">
+                                <div>
+                                    <div class="font-bold text-slate-200 text-sm mb-1 flex items-center">${getDisplayName(p.name)} ${rankBadge} <span class="text-[9px] text-slate-500 font-normal ml-1">(${p.buy}B | ${p.add}A | ${p.bty}K)</span></div>
+                                    <button onclick="const m=state.history.find(x=>x.id==${h.id}); const pl=m.players.find(y=>y.id==${p.id}); pl.paid=!pl.paid; sync(); renderHistory();" class="text-[8px] font-black px-2 py-1 mt-1 rounded-lg border transition-colors btn-press ${p.paid?'bg-emerald-500/20 text-emerald-400 border-emerald-500/50':'bg-slate-800 text-slate-500 border-slate-700'}">${p.paid?'✅ ĐÃ TT':'❌ CHƯA TT'}</button>
+                                </div>
+                                <span class="font-black text-base ${p.final>=0?'text-emerald-400':'text-red-500'}">${p.final>0?'+':''}${fmt(p.final)}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderStats() {
+            let filterStart = document.getElementById('filterStartDate') ? document.getElementById('filterStartDate').value : '';
+            let filterEnd = document.getElementById('filterEndDate') ? document.getElementById('filterEndDate').value : '';
+            
+            let startTs = 0;
+            let endTs = Number.MAX_SAFE_INTEGER;
+
+            if (filterStart) {
+                let d = new Date(filterStart);
+                d.setHours(0,0,0,0);
+                startTs = d.getTime();
+            }
+            if (filterEnd) {
+                let d = new Date(filterEnd);
+                d.setHours(23,59,59,999);
+                endTs = d.getTime();
+            }
+
+            let stats = {}; 
+            let nD = {}; 
+            
+            let expectedFund = 0;  
+            let cashIn_Tour = 0;   
+            let cashOut_Tour = 0;   
+            let cashIn_Extra = 0;   
+            let cashOut_Extra = 0;  
+            let cashIn_Debt = 0;    
+            let cashOut_Debt = 0;   
+
+            let filteredHistory = state.history.filter(m => {
+                let mTs = parseDateStr(m.date);
+                if (mTs === 0) return true;
+                return mTs >= startTs && mTs <= endTs;
+            });
+
+            let filteredExpenses = state.expenses.filter(e => {
+                let eTs = e.id; 
+                return eTs >= startTs && eTs <= endTs;
+            });
+            let filteredIncomes = state.incomes.filter(i => {
+                let iTs = i.id; 
+                return iTs >= startTs && iTs <= endTs;
+            });
+            let filteredExtraDebts = state.extraDebts.filter(ed => {
+                let edTs = ed.id; 
+                return edTs >= startTs && edTs <= endTs;
+            });
+            
+            // --- SỬA LẠI LOGIC KẾ TOÁN CHI PHÍ & CHI HỘ ---
+            cashOut_Extra = 0;
+            filteredExpenses.forEach(e => {
+                if (e.payer && e.payer !== "") {
+                    // CÓ NGƯỜI CHI HỘ: Quỹ nợ người này, KHÔNG làm giảm Tiền mặt Bank
+                    let pName = getDisplayName(e.payer);
+                    if (!nD[pName]) nD[pName] = 0;
+                    nD[pName] += e.amount; // Cấn trừ nợ (Ví dụ nợ -1000k + 100k chi hộ = còn nợ -900k)
+                } else {
+                    // KHÔNG AI CHI HỘ: Quỹ tự trả tiền, tính vào dòng tiền xuất ra
+                    cashOut_Extra += e.amount;
+                }
+            });
+
+            cashIn_Extra = filteredIncomes.reduce((s, i) => s + i.amount, 0);
+            
+            filteredHistory.forEach(m => {
+                expectedFund += m.fund; 
+                
+                m.players.forEach(p => {
+                    let pName = getDisplayName(p.name);
+
+                    if(!stats[pName]) {
+                        stats[pName] = { tours: 0, buyins: 0, addons: 0, kills: 0, cost: 0, rank1: 0, rank2: 0, rank3: 0, revenue: 0, profit: 0 };
+                    }
+                    stats[pName].tours += 1;
+                    stats[pName].buyins += p.buy;
+                    stats[pName].addons += p.add;
+                    stats[pName].kills += p.bty;
+                    
+                    let matchCost = p.buy * (m.matchNumber >= 41 ? 60000 : 50000); 
+                    let pRevenue = p.final + matchCost; 
+                    
+                    stats[pName].cost += matchCost;
+                    stats[pName].revenue += pRevenue;
+                    stats[pName].profit += p.final;
+                    
+                    if(p.rank === 1) stats[pName].rank1 += 1;
+                    if(p.rank === 2) stats[pName].rank2 += 1;
+                    if(p.rank === 3) stats[pName].rank3 += 1;
+
+                    if (!p.paid) {
+                        if (!nD[pName]) nD[pName] = 0;
+                        nD[pName] += p.final;
+                    } else {
+                        if (p.final < 0) cashIn_Tour += Math.abs(p.final);
+                        if (p.final > 0) cashOut_Tour += p.final;          
+                    }
+                });
+            });
+            
+            filteredExtraDebts.forEach(ed => {
+                let edName = getDisplayName(ed.name);
+
+                if(!nD[edName]) nD[edName] = 0;
+                nD[edName] += ed.amount;
+                
+                if (ed.amount > 0) {
+                    cashIn_Debt += ed.amount; 
+                } else if (ed.amount < 0 && ed.isCashLoan === true) {
+                    cashOut_Debt += Math.abs(ed.amount); 
+                }
+            });
+
+            let totalPlayersOwe = 0; 
+            let totalFundOwes = 0;   
+            
+            Object.keys(nD).forEach(n => {
+                if (nD[n] < 0) totalPlayersOwe += Math.abs(nD[n]);
+                if (nD[n] > 0) totalFundOwes += nD[n];
+            });
+            
+            let totalCashIn = cashIn_Tour + cashIn_Extra + cashIn_Debt;
+            let totalCashOut = cashOut_Tour + cashOut_Extra + cashOut_Debt;
+            let actualBankBalance = totalCashIn - totalCashOut;
+
+            // Gộp chung Thu và Chi thành 1 danh sách, sau đó sắp xếp Mới nhất lên đầu
+            let combinedFundTx = [
+                ...filteredIncomes.map(i => ({ ...i, txType: 'in' })),
+                ...filteredExpenses.map(e => ({ ...e, txType: 'out' }))
+            ].sort((a, b) => b.id - a.id);
+            
+            // Đảo ngược danh sách nợ ngoài để Mới nhất lên đầu
+            let reversedExtraDebts = [...filteredExtraDebts].sort((a, b) => b.id - a.id);
+
+            let statsHtml = Object.keys(stats).sort((a,b) => stats[b].profit - stats[a].profit).map(n => {
+                let s = stats[n];
+                let winRate = s.tours > 0 ? (((s.rank1 + s.rank2 + s.rank3) / s.tours) * 100).toFixed(1) : 0;
+                return `
+                <div class="glass-card rounded-2xl p-5 mb-4 border-l-4 ${s.profit >= 0 ? 'border-emerald-500' : 'border-red-500'} bg-slate-900/40">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                        <span class="text-base font-black text-white">${n}</span>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-bold border border-slate-700">Tham gia: ${s.tours} Tour</span>
+                            <span class="text-[9px] text-emerald-400 font-bold uppercase">ITM (Có giải): ${winRate}%</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 text-xs mb-5">
+                        <div class="text-slate-400">Số Buy-in: <span class="font-black text-orange-400 ml-1">${s.buyins}</span></div>
+                        <div class="text-slate-400">Số Add-on: <span class="font-black text-blue-400 ml-1">${s.addons}</span></div>
+                        <div class="text-slate-400">Số Mạng (Kill): <span class="font-black text-emerald-400 ml-1">${s.kills}</span></div>
+                        <div class="text-slate-400">Tổng Vốn: <span class="font-black text-red-400 ml-1">${fmt(s.cost)}</span></div>
+                        <div class="text-slate-400">Giải Nhất: <span class="font-black text-yellow-500 ml-1">${s.rank1}</span></div>
+                        <div class="text-slate-400">Giải Nhì: <span class="font-black text-slate-300 ml-1">${s.rank2}</span></div>
+                        <div class="text-slate-400">Giải Ba: <span class="font-black text-orange-700 ml-1">${s.rank3}</span></div>
+                        <div class="text-slate-400">Tổng Thắng: <span class="font-black text-emerald-400 ml-1">${fmt(s.revenue)}</span></div>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-slate-800/50">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Lợi nhuận:</span>
+                        <span class="text-xl font-black tracking-tighter ${s.profit >= 0 ? 'text-emerald-400' : 'text-red-500'}">${s.profit > 0 ? '+' : ''}${fmt(s.profit)}</span>
+                    </div>
+                </div>`;
+            }).join('') || '<p class="text-center py-6 text-slate-600 italic text-sm">Chưa có dữ liệu thi đấu trong khoảng thời gian này...</p>';
+
+            document.getElementById('statsContent').innerHTML = `
+                <div class="glass-card rounded-[2rem] p-6 mb-6 border-l-4 border-orange-500 bg-slate-900/50 shadow-2xl">
+                    <h3 class="text-[11px] font-black text-orange-500 uppercase tracking-widest mb-4">⚠️ CÔNG NỢ GỘP (CHƯA TT)</h3>
+                    <div class="space-y-1 mb-6">${Object.keys(nD).map(n => `<div class="flex justify-between py-3 border-b border-slate-800 text-sm"><span class="font-bold text-slate-200">${n}</span><span class="font-black ${nD[n]<0?'text-red-500':'text-emerald-400'}">${nD[n]>0?'+':''}${fmt(nD[n])}</span></div>`).join('') || '<p class="text-center text-slate-600 italic text-sm py-4">Sòng phẳng!</p>'}</div>
+                    
+                    <button onclick="copyDebtOnly()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase shadow-lg shadow-blue-900/30 active:scale-95 transition-transform flex justify-center items-center gap-2 mb-4"><i class="ph-bold ph-paper-plane-right text-lg"></i> COPY BÁO CÁO NHÓM</button>
+                    
+                    <div class="mt-4 pt-4 border-t border-slate-800">
+                        <h4 class="text-[10px] text-slate-400 font-bold mb-3">ĐIỀU CHỈNH CÔNG NỢ NGOÀI</h4>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex gap-2">
+                                <select id="edName" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                                    ${DEFAULTS.map(n => `<option value='${n}'>${n}</option>`).join('')}
+                                </select>
+                                <select id="edType" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white flex-1">
+                                    <option value="1">Trả quỹ / Đóng (+)</option>
+                                    <option value="-2">Ghi nhận Nợ Cũ (Không trừ tiền mặt) (-)</option>
+                                    <option value="-1">Quỹ xuất cho vay (Trừ tiền mặt) (-)</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2">
+                                <input id="edReason" placeholder="Lý do (VD: Vay quỹ, Nợ cũ)..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                                <input id="edAmount" type="number" placeholder="Số tiền..." class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                                <button onclick="addExtraDebt()" class="bg-orange-600 px-4 rounded-lg text-white font-black hover:bg-orange-500 transition-colors">+</button>
+                            </div>
+                        </div>
+                        <div class="mt-3 space-y-1">
+                            ${reversedExtraDebts.map(ed => `
+                                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
+                                    <span class="text-slate-300"><span class="text-slate-500 text-[8px] mr-1">[${formatTime(ed.id)}]</span> <b>${getDisplayName(ed.name)}</b>: ${ed.reason}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold ${ed.amount >= 0 ? 'text-emerald-400' : 'text-red-500'}">${ed.amount > 0 ? '+' : ''}${fmt(ed.amount)}</span>
+                                        <button onclick="editExtraDebt(${ed.id})" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
+                                        <button onclick="deleteExtraDebt(${ed.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-2xl p-5 mb-6 border border-slate-700">
+                    <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="ph-bold ph-database text-lg"></i> Quản lý & Sao lưu</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="exportToCSV()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold py-3 rounded-xl text-[10px] uppercase flex flex-col items-center gap-1 transition-colors">
+                            <i class="ph-bold ph-download-simple text-xl text-blue-400"></i> File Dự Phòng (.csv)
+                        </button>
+                        <button onclick="syncToGoogleSheets(false)" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold py-3 rounded-xl text-[10px] uppercase flex flex-col items-center gap-1 transition-colors cursor-pointer">
+                            <i class="ph-bold ph-google-logo text-xl text-emerald-500"></i> Đẩy Lên G-Sheets
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="text-[11px] font-black text-emerald-500 uppercase tracking-widest mb-4 px-2">🏆 BẢNG VÀNG THÀNH TÍCH</h3>
+                ${statsHtml}
+
+                <div class="glass-card rounded-2xl p-6 mt-6 border-l-4 border-slate-500">
+                    <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">💰 QUẢN LÝ DÒNG TIỀN THỰC TẾ</h3>
+                    
+                    <div class="flex justify-between items-center bg-slate-800/80 p-5 rounded-xl border border-blue-500/50 mb-4 shadow-lg shadow-blue-900/20">
+                        <div class="flex flex-col">
+                            <span class="text-[13px] font-black text-white uppercase tracking-widest">TIỀN MẶT ĐANG CẦM (BANK)</span>
+                            <span class="text-[10px] text-blue-400 mt-1">SỐ DƯ THỰC TẾ TRONG TÀI KHOẢN</span>
+                        </div>
+                        <span class="text-3xl font-black tracking-tighter ${actualBankBalance >= 0 ? 'text-blue-400' : 'text-red-500'}">${actualBankBalance > 0 ? '+' : ''}${fmt(actualBankBalance)}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2 text-xs mb-4 border-b border-slate-800 pb-4">
+                        <div class="flex justify-between text-slate-400"><span>Quỹ dự kiến (Nếu thu đủ 100%):</span> <span class="font-black text-white">${fmt(expectedFund)}</span></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2 text-xs mb-4 border-b border-slate-800 pb-4">
+                        <h4 class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest mb-1">DÒNG TIỀN VÀO (+)</h4>
+                        <div class="flex justify-between text-slate-400"><span>Tiền Tour (AE đã nộp):</span> <span class="font-black text-emerald-400">+${fmt(cashIn_Tour)}</span></div>
+                        <div class="flex justify-between text-slate-400"><span>AE trả nợ cũ / Đóng thêm:</span> <span class="font-black text-emerald-400">+${fmt(cashIn_Debt)}</span></div>
+                        <div class="flex justify-between text-slate-400"><span>Thu khác (Tài trợ...):</span> <span class="font-black text-emerald-400">+${fmt(cashIn_Extra)}</span></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-2 text-xs mb-4 border-b border-slate-800 pb-4">
+                        <h4 class="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">DÒNG TIỀN RA (-)</h4>
+                        <div class="flex justify-between text-slate-400"><span>Trả thưởng Tour (Đã ck):</span> <span class="font-black text-red-400">-${fmt(cashOut_Tour)}</span></div>
+                        <div class="flex justify-between text-slate-400"><span>Chi phí tổ chức quỹ:</span> <span class="font-black text-red-400">-${fmt(cashOut_Extra)}</span></div>
+                        <div class="flex justify-between text-slate-400"><span>Xuất quỹ cho AE vay tiền:</span> <span class="font-black text-red-400">-${fmt(cashOut_Debt)}</span></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-2 text-xs mb-4 border-b border-slate-800 pb-4">
+                        <h4 class="text-[10px] text-orange-500 font-bold uppercase tracking-widest mb-1">TỔNG CÔNG NỢ HIỆN TẠI</h4>
+                        <div class="flex justify-between text-slate-400"><span>TỔNG NỢ (AE đang nợ quỹ):</span> <span class="font-black text-orange-500">${fmt(totalPlayersOwe)}</span></div>
+                        <div class="flex justify-between text-slate-400"><span>AE DƯƠNG (Quỹ cần trả AE):</span> <span class="font-black text-slate-300">${fmt(totalFundOwes)}</span></div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4">
+                        <h4 class="text-[10px] text-slate-400 font-bold mb-3">GHI NHẬN THU / CHI QUỸ TỔ CHỨC</h4>
+                        <div class="flex gap-2 mb-2">
+                            <select id="fundType" onchange="document.getElementById('fundPayerWrapper').style.display = this.value === 'out' ? 'block' : 'none';" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                                <option value="in">Thu khác (+)</option>
+                                <option value="out">Chi phí tổ chức (-)</option>
+                            </select>
+                            <input id="fundReason" placeholder="Lý do chi/thu..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                        </div>
+                        <div id="fundPayerWrapper" style="display: none;" class="mb-2">
+                            <select id="fundPayer" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                                <option value="">[Trừ thẳng tiền mặt quỹ]</option>
+                                ${DEFAULTS.map(n => `<option value='${n}'>Người chi hộ: ${n}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <input id="fundAmount" type="number" placeholder="Số tiền..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white">
+                            <button onclick="addFundTransaction()" class="bg-emerald-600 px-6 rounded-lg text-white font-black hover:bg-emerald-500 transition-colors">+</button>
+                        </div>
+                        
+                        <div class="mt-4 space-y-1">
+                            ${combinedFundTx.map(tx => tx.txType === 'in' ? `
+                                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
+                                    <span class="text-slate-300"><span class="bg-emerald-900/50 text-emerald-400 px-1 py-0.5 rounded text-[8px] mr-1 font-bold">THU</span> <span class="text-slate-500 text-[8px] mr-1">[${formatTime(tx.id)}]</span> ${tx.reason}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-emerald-400 font-bold">+${fmt(tx.amount)}</span>
+                                        <button onclick="editFundTransaction(${tx.id}, 'in')" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
+                                        <button onclick="deleteIncome(${tx.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
+                                    <span class="text-slate-300"><span class="bg-red-900/50 text-red-400 px-1 py-0.5 rounded text-[8px] mr-1 font-bold">CHI</span> <span class="text-slate-500 text-[8px] mr-1">[${formatTime(tx.id)}]</span> ${tx.reason} ${tx.payer ? `<span class="text-orange-400 ml-1 font-bold">(Hộ: ${getDisplayName(tx.payer)})</span>` : ''}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-500 font-bold">-${fmt(tx.amount)}</span>
+                                        <button onclick="editFundTransaction(${tx.id}, 'out')" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
+                                        <button onclick="deleteExpense(${tx.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function fmt(n) { 
+            let val = Math.round(n);
+            if (val === 0) return '0K';
+            let kVal = Math.round(val / 100) / 10; 
+            return kVal.toLocaleString('vi-VN') + 'K'; 
+        }
+        
+        function switchTab(t) {
+            document.getElementById('view-players').style.display = (t==='players'?'block':'none');
+            document.getElementById('view-summary').style.display = (t==='summary'?'block':'none');
+            document.getElementById('tab1').className = `flex-1 py-4 rounded-[1.8rem] font-black text-[10px] uppercase flex flex-col items-center gap-1 tab-active transition-all ${t==='players'?'tab-active':'text-slate-500'}`;
+            document.getElementById('tab2').className = `flex-1 py-4 rounded-[1.8rem] font-black text-[10px] uppercase flex flex-col items-center gap-1 transition-all ${t==='summary'?'tab-active':'text-slate-500'}`;
+            if(t==='summary') render();
+        }
+        
+        function openModal(id) { document.getElementById(id).classList.add('active'); if(id=='modalHistory') renderHistory(); if(id=='modalStats') renderStats(); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        
+        let diagCb = null;
+        function confirmAction(t, m, cb) { document.getElementById('diagTitle').innerText = t; document.getElementById('diagMsg').innerText = m; document.getElementById('diagInput').classList.add('hidden'); document.getElementById('btnCancel').style.display = 'block'; document.getElementById('customDialog').style.display = 'flex'; diagCb = cb; }
+        function customAlert(t, m) { document.getElementById('diagTitle').innerText = t; document.getElementById('diagMsg').innerText = m; document.getElementById('diagInput').classList.add('hidden'); document.getElementById('btnCancel').style.display = 'none'; document.getElementById('customDialog').style.display = 'flex'; diagCb = null; }
+        function customPrompt(t, m, def, cb) { 
+            document.getElementById('diagTitle').innerText = t; document.getElementById('diagMsg').innerText = m; 
+            const inp = document.getElementById('diagInput'); inp.value = def; inp.classList.remove('hidden');
+            document.getElementById('btnCancel').style.display = 'block'; document.getElementById('customDialog').style.display = 'flex'; 
+            inp.focus(); diagCb = () => cb(inp.value); 
+        }
+        function closeDialog(ok) { document.getElementById('customDialog').style.display = 'none'; if(ok && diagCb) diagCb(); }
+        
+        function copyDebtOnly() {
+             let filterStart = document.getElementById('filterStartDate') ? document.getElementById('filterStartDate').value : '';
+             let filterEnd = document.getElementById('filterEndDate') ? document.getElementById('filterEndDate').value : '';
+             let startTs = 0, endTs = Number.MAX_SAFE_INTEGER;
+
+             if (filterStart) { let d = new Date(filterStart); d.setHours(0,0,0,0); startTs = d.getTime(); }
+             if (filterEnd) { let d = new Date(filterEnd); d.setHours(23,59,59,999); endTs = d.getTime(); }
+
+             let nD = {};
+             state.history.filter(m => {
+                 let mTs = parseDateStr(m.date);
+                 if (mTs === 0) return true;
+                 return mTs >= startTs && mTs <= endTs;
+             }).forEach(m => { 
+                 m.players.forEach(p => { 
+                     if(!p.paid) { 
+                         let pName = getDisplayName(p.name);
+                         if(!nD[pName]) nD[pName] = 0; 
+                         nD[pName] += p.final; 
+                     }
+                 });
+             });
+             
+             state.extraDebts.filter(ed => {
+                 let eTs = ed.id; 
+                 return eTs >= startTs && eTs <= endTs;
+             }).forEach(ed => {
+                 let edName = getDisplayName(ed.name);
+                 if(!nD[edName]) nD[edName] = 0;
+                 nD[edName] += ed.amount;
+             });
+
+             let text = `🏆 TỔNG KẾT LÁ CHẮN LỬA 🏆\n⚠️ CÔNG NỢ${(filterStart || filterEnd) ? ' (THEO BỘ LỌC)' : ''}:\n`;
+             let hasD = false;
+             Object.keys(nD).forEach(n => { 
+                 if(nD[n] !== 0) {
+                     text += `- ${n}: ${nD[n] > 0 ? '+' : ''}${fmt(nD[n])}\n`; 
+                     hasD = true; 
+                 }
+             });
+             
+             if(!hasD) text += `Mọi người đã TT sòng phẳng!\n`;
+             
+             const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); 
+             customAlert("Thành công", "Đã copy báo cáo công nợ vào bộ nhớ tạm!");
+        }
+
+        function addExtraDebt() {
+            let name = document.getElementById('edName').value;
+            let typeVal = parseInt(document.getElementById('edType').value);
+            let reason = document.getElementById('edReason').value.trim();
+            let amount = parseInt(document.getElementById('edAmount').value);
+            if(!reason || isNaN(amount) || amount <= 0) return;
+            
+            let finalAmount = amount;
+            let isCash = false;
+
+            if (typeVal === 1) {
+                finalAmount = amount; 
+            } else if (typeVal === -1) {
+                finalAmount = -amount; 
+                isCash = true;
+            } else if (typeVal === -2) {
+                finalAmount = -amount; 
+                isCash = false;
+            }
+
+            state.extraDebts.push({
+                id: Date.now(),
+                name: name,
+                reason: reason,
+                amount: finalAmount,
+                isCashLoan: isCash
+            });
+            sync(); renderStats();
+        }
+
+        function editExtraDebt(id) {
+            let item = state.extraDebts.find(x => x.id === id);
+            if (item) {
+                customPrompt("Sửa Lý Do", "Nhập lý do mới:", item.reason, (newReason) => {
+                    if (newReason.trim() !== "") {
+                        setTimeout(() => {
+                            let currentAbsAmount = Math.abs(item.amount);
+                            customPrompt("Sửa Số Tiền", "Nhập số tiền mới:", currentAbsAmount, (newAmountStr) => {
+                                let newAmount = parseInt(newAmountStr);
+                                if (!isNaN(newAmount) && newAmount > 0) {
+                                    item.reason = newReason.trim();
+                                    item.amount = item.amount < 0 ? -newAmount : newAmount;
+                                    sync(); renderStats();
+                                } else {
+                                    setTimeout(() => customAlert("Lỗi", "Số tiền không hợp lệ!"), 300);
+                                }
+                            });
+                        }, 300);
+                    }
+                });
+            }
+        }
+
+        function deleteExtraDebt(id) {
+            state.extraDebts = state.extraDebts.filter(x => x.id !== id);
+            sync(); renderStats();
+        }
+
+        function addFundTransaction() {
+            let type = document.getElementById('fundType').value;
+            let reason = document.getElementById('fundReason').value.trim();
+            let amount = parseInt(document.getElementById('fundAmount').value);
+            let payer = type === 'out' ? document.getElementById('fundPayer').value : "";
+            if(!reason || isNaN(amount) || amount <= 0) return;
+            
+            if (type === 'in') {
+                state.incomes.push({ id: Date.now(), reason: reason, amount: amount });
+            } else {
+                state.expenses.push({ id: Date.now(), reason: reason, amount: amount, payer: payer });
+            }
+            sync(); renderStats();
+        }
+
+        function editFundTransaction(id, type) {
+            let list = type === 'in' ? state.incomes : state.expenses;
+            let item = list.find(x => x.id === id);
+            
+            if (item) {
+                customPrompt("Sửa Lý Do", "Nhập lý do mới:", item.reason, (newReason) => {
+                    if (newReason.trim() !== "") {
+                        setTimeout(() => {
+                            customPrompt("Sửa Số Tiền", "Nhập số tiền mới:", item.amount, (newAmountStr) => {
+                                let newAmount = parseInt(newAmountStr);
+                                if (!isNaN(newAmount) && newAmount > 0) {
+                                    item.reason = newReason.trim();
+                                    item.amount = newAmount;
+                                    sync(); renderStats();
+                                } else {
+                                    setTimeout(() => customAlert("Lỗi", "Số tiền không hợp lệ!"), 300);
+                                }
+                            });
+                        }, 300);
+                    }
+                });
+            }
+        }
+        
+        function deleteIncome(id) {
+            state.incomes = state.incomes.filter(x => x.id !== id);
+            sync(); renderStats();
+        }
+        
+        function deleteExpense(id) {
+            state.expenses = state.expenses.filter(x => x.id !== id);
+            sync(); renderStats();
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function syncToGoogleSheets(isSilent = false) {
+            if (!GOOGLE_SHEET_URL || !GOOGLE_SHEET_URL.includes('script.google.com')) {
+                if(!isSilent) customAlert("Thiếu Link", "Bạn chưa cấu hình link Google Sheets. Vui lòng thiết lập Google Apps Script và dán link vào code.");
+                return;
+            }
+            
+            if(!isSilent) showLoading("Đang đẩy dữ liệu lên Google Sheets...");
+            
+            fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                body: JSON.stringify({ rawText: JSON.stringify(state) })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(!isSilent) hideLoading();
+                if(!isSilent) {
+                    if(data.status === 'success') {
+                        customAlert("Thành công", "Đã chép toàn bộ dữ liệu lịch sử lên Google Sheets của bạn!");
+                    } else {
+                        customAlert("Lỗi", "Có lỗi: " + data.message);
+                    }
+                }
+            })
+            .catch(err => {
+                if(!isSilent) {
+                    hideLoading();
+                    customAlert("Lỗi", "Không thể kết nối. Vui lòng kiểm tra lại link Google Sheets.");
+                }
+            });
+        }
+
+        function exportToCSV() {
+            if (!state.history || state.history.length === 0) {
+                customAlert("Thông báo", "Chưa có dữ liệu lịch sử để xuất!");
+                return;
+            }
+
+            let csvContent = "MaTran,SoTour,NgayThang,TongBuyin,TongAddon,TongBounty,QuyTrich,QuyGiaiThuong,Giai1,Giai2,Giai3,NguoiNhat,NguoiNhi,NguoiBa";
+            DEFAULTS.forEach(name => {
+                csvContent += `,Buyin_${name},Addon_${name},Bounty_${name},Thuong_${name},LoiNhuan_${name}`;
+            });
+            csvContent += "\n";
+
+            state.history.forEach(m => {
+                let nhat = "", nhi = "", ba = "";
+                m.players.forEach(p => {
+                    if (p.rank === 1) nhat = getDisplayName(p.name);
+                    if (p.rank === 2) nhi = getDisplayName(p.name);
+                    if (p.rank === 3) ba = getDisplayName(p.name);
+                });
+
+                let row = `${m.id},${m.matchNumber || ''},${m.date},${m.tB || 0},${m.tA || 0},${m.tBty || 0},${m.fund || 0},${m.prizePool || 0},${m.prizes ? m.prizes[0] : 0},${m.prizes ? m.prizes[1] : 0},${m.prizes ? m.prizes[2] : 0},${nhat},${nhi},${ba}`;
+
+                DEFAULTS.forEach(name => {
+                    let player = m.players.find(p => getDisplayName(p.name) === name);
+                    if (player) {
+                        let prizeMoney = (player.rank > 0 && m.prizes ? m.prizes[player.rank - 1] : 0);
+                        let btyMoney = (player.bty || 0) * CFG.BTY;
+                        let totalReward = prizeMoney + btyMoney;
+                        row += `,${player.buy || 0},${player.add || 0},${player.bty || 0},${totalReward},${player.final || 0}`;
+                    } else {
+                        row += `,0,0,0,0,0`;
+                    }
+                });
+                csvContent += row + "\n";
+            });
+
+            if (state.incomes && state.incomes.length > 0) {
+                csvContent += "\n--- DANH SACH THU QUY ---\n";
+                csvContent += "IDThu,LyDo,SoTien\n";
+                state.incomes.forEach(i => csvContent += `${i.id},${i.reason},${i.amount}\n`);
+            }
+            if (state.expenses && state.expenses.length > 0) {
+                csvContent += "\n--- DANH SACH CHI QUY ---\n";
+                csvContent += "IDChi,LyDo,SoTien\n";
+                state.expenses.forEach(e => csvContent += `${e.id},${e.reason},${e.amount}\n`);
+            }
+            if (state.extraDebts && state.extraDebts.length > 0) {
+                csvContent += "\n--- DANH SACH NO NGOAI ---\n";
+                csvContent += "IDNo,Ten,LyDo,SoTien\n";
+                state.extraDebts.forEach(ed => csvContent += `${ed.id},${getDisplayName(ed.name)},${ed.reason},${ed.amount}\n`);
+            }
+
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' }); 
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `LCL_Backup_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
