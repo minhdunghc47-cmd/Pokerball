@@ -129,10 +129,10 @@
     <script>
         const CFG = { BUYIN: 60000, TOUR: 50000, BTY: 10000, ADDON: 50000, RATE: 0.5, PRIZES: [0.25, 0.15, 0.1] };
         
-        // MẢNG BIỆT DANH MỚI (Dùng ngoặc kép thông minh “ ” để an toàn tuyệt đối cho code HTML)
+        // MẢNG BIỆT DANH MỚI
         const DEFAULTS = ['Đại Ka “C”', 'Nhị ka “Y”', 'Tam ka “G”', 'Tứ ka “H”', 'Ngũ ka “T”', 'Lục ka “Q”', 'Cốc', 'Ly'];
         
-        // TỪ ĐIỂN DỊCH THUẬT (Không sửa data gốc, chỉ dịch khi hiển thị)
+        // TỪ ĐIỂN DỊCH THUẬT
         const MIGRATION_MAP = {
             'Cảnh': 'Đại Ka “C”',
             'Yên': 'Nhị ka “Y”',
@@ -144,13 +144,16 @@
             'Hoàng': 'Ly'
         };
 
-        // Hàm Dịch Tên
         function getDisplayName(oldName) {
             return MIGRATION_MAP[oldName] || oldName;
         }
 
         const FIREBASE_URL = 'https://lcl-v1-default-rtdb.asia-southeast1.firebasedatabase.app';
         const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycby6SNzRM-CCaiyGwCzs3JH53GjzBfFa5fsZqpxILtC9MYjSaUXmaGhouZUM6aq2EqnT/exec';
+
+        // Biến trạng thái Thu Gọn / Xem Thêm
+        let showAllExtraDebts = false;
+        let showAllFundTx = false;
 
         let state = JSON.parse(localStorage.getItem('LCL_V4_DATA')) || {
             players: DEFAULTS.map((n, i) => ({ id: i, name: n, buy: 0, add: 0, bty: 0, rank: 0, paid: false })),
@@ -424,6 +427,17 @@
             }).join('');
         }
 
+        // Toggle state functions
+        function toggleExtraDebts() {
+            showAllExtraDebts = !showAllExtraDebts;
+            renderStats();
+        }
+
+        function toggleFundTx() {
+            showAllFundTx = !showAllFundTx;
+            renderStats();
+        }
+
         function renderStats() {
             let filterStart = document.getElementById('filterStartDate') ? document.getElementById('filterStartDate').value : '';
             let filterEnd = document.getElementById('filterEndDate') ? document.getElementById('filterEndDate').value : '';
@@ -472,16 +486,13 @@
                 return edTs >= startTs && edTs <= endTs;
             });
             
-            // --- SỬA LẠI LOGIC KẾ TOÁN CHI PHÍ & CHI HỘ ---
             cashOut_Extra = 0;
             filteredExpenses.forEach(e => {
                 if (e.payer && e.payer !== "") {
-                    // CÓ NGƯỜI CHI HỘ: Quỹ nợ người này, KHÔNG làm giảm Tiền mặt Bank
                     let pName = getDisplayName(e.payer);
                     if (!nD[pName]) nD[pName] = 0;
-                    nD[pName] += e.amount; // Cấn trừ nợ (Ví dụ nợ -1000k + 100k chi hộ = còn nợ -900k)
+                    nD[pName] += e.amount;
                 } else {
-                    // KHÔNG AI CHI HỘ: Quỹ tự trả tiền, tính vào dòng tiền xuất ra
                     cashOut_Extra += e.amount;
                 }
             });
@@ -548,14 +559,63 @@
             let totalCashOut = cashOut_Tour + cashOut_Extra + cashOut_Debt;
             let actualBankBalance = totalCashIn - totalCashOut;
 
-            // Gộp chung Thu và Chi thành 1 danh sách, sau đó sắp xếp Mới nhất lên đầu
             let combinedFundTx = [
                 ...filteredIncomes.map(i => ({ ...i, txType: 'in' })),
                 ...filteredExpenses.map(e => ({ ...e, txType: 'out' }))
             ].sort((a, b) => b.id - a.id);
             
-            // Đảo ngược danh sách nợ ngoài để Mới nhất lên đầu
             let reversedExtraDebts = [...filteredExtraDebts].sort((a, b) => b.id - a.id);
+
+            // --- BUILD HTML FOR EXTRA DEBTS ---
+            let visibleExtraDebts = showAllExtraDebts ? reversedExtraDebts : reversedExtraDebts.slice(0, 5);
+            let extraDebtsHtml = visibleExtraDebts.map(ed => `
+                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
+                    <span class="text-slate-300"><span class="text-slate-500 text-[8px] mr-1">[${formatTime(ed.id)}]</span> <b>${getDisplayName(ed.name)}</b>: ${ed.reason}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold ${ed.amount >= 0 ? 'text-emerald-400' : 'text-red-500'}">${ed.amount > 0 ? '+' : ''}${fmt(ed.amount)}</span>
+                        <button onclick="editExtraDebt(${ed.id})" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
+                        <button onclick="deleteExtraDebt(${ed.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+
+            if (reversedExtraDebts.length > 5) {
+                extraDebtsHtml += `
+                    <button onclick="toggleExtraDebts()" class="w-full text-center py-2 mt-2 text-[10px] font-bold text-slate-500 hover:text-white bg-slate-900/50 rounded-lg border border-slate-800 border-dashed transition-colors">
+                        ${showAllExtraDebts ? 'Thu gọn ⬆️' : `Xem thêm (${reversedExtraDebts.length - 5} giao dịch khác) ⬇️`}
+                    </button>
+                `;
+            }
+
+            // --- BUILD HTML FOR FUND TRANSACTIONS ---
+            let visibleFundTx = showAllFundTx ? combinedFundTx : combinedFundTx.slice(0, 5);
+            let fundTxHtml = visibleFundTx.map(tx => tx.txType === 'in' ? `
+                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
+                    <span class="text-slate-300"><span class="bg-emerald-900/50 text-emerald-400 px-1 py-0.5 rounded text-[8px] mr-1 font-bold">THU</span> <span class="text-slate-500 text-[8px] mr-1">[${formatTime(tx.id)}]</span> ${tx.reason}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-400 font-bold">+${fmt(tx.amount)}</span>
+                        <button onclick="editFundTransaction(${tx.id}, 'in')" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
+                        <button onclick="deleteIncome(${tx.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
+                    </div>
+                </div>
+            ` : `
+                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
+                    <span class="text-slate-300"><span class="bg-red-900/50 text-red-400 px-1 py-0.5 rounded text-[8px] mr-1 font-bold">CHI</span> <span class="text-slate-500 text-[8px] mr-1">[${formatTime(tx.id)}]</span> ${tx.reason} ${tx.payer ? `<span class="text-orange-400 ml-1 font-bold">(Hộ: ${getDisplayName(tx.payer)})</span>` : ''}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-red-500 font-bold">-${fmt(tx.amount)}</span>
+                        <button onclick="editFundTransaction(${tx.id}, 'out')" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
+                        <button onclick="deleteExpense(${tx.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+
+            if (combinedFundTx.length > 5) {
+                fundTxHtml += `
+                    <button onclick="toggleFundTx()" class="w-full text-center py-2 mt-2 text-[10px] font-bold text-slate-500 hover:text-white bg-slate-900/50 rounded-lg border border-slate-800 border-dashed transition-colors">
+                        ${showAllFundTx ? 'Thu gọn ⬆️' : `Xem thêm (${combinedFundTx.length - 5} giao dịch khác) ⬇️`}
+                    </button>
+                `;
+            }
 
             let statsHtml = Object.keys(stats).sort((a,b) => stats[b].profit - stats[a].profit).map(n => {
                 let s = stats[n];
@@ -613,16 +673,7 @@
                             </div>
                         </div>
                         <div class="mt-3 space-y-1">
-                            ${reversedExtraDebts.map(ed => `
-                                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
-                                    <span class="text-slate-300"><span class="text-slate-500 text-[8px] mr-1">[${formatTime(ed.id)}]</span> <b>${getDisplayName(ed.name)}</b>: ${ed.reason}</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold ${ed.amount >= 0 ? 'text-emerald-400' : 'text-red-500'}">${ed.amount > 0 ? '+' : ''}${fmt(ed.amount)}</span>
-                                        <button onclick="editExtraDebt(${ed.id})" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
-                                        <button onclick="deleteExtraDebt(${ed.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
-                                    </div>
-                                </div>
-                            `).join('')}
+                            ${extraDebtsHtml}
                         </div>
                     </div>
                 </div>
@@ -698,25 +749,7 @@
                         </div>
                         
                         <div class="mt-4 space-y-1">
-                            ${combinedFundTx.map(tx => tx.txType === 'in' ? `
-                                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
-                                    <span class="text-slate-300"><span class="bg-emerald-900/50 text-emerald-400 px-1 py-0.5 rounded text-[8px] mr-1 font-bold">THU</span> <span class="text-slate-500 text-[8px] mr-1">[${formatTime(tx.id)}]</span> ${tx.reason}</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-emerald-400 font-bold">+${fmt(tx.amount)}</span>
-                                        <button onclick="editFundTransaction(${tx.id}, 'in')" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
-                                        <button onclick="deleteIncome(${tx.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
-                                    </div>
-                                </div>
-                            ` : `
-                                <div class="flex justify-between text-[10px] border-b border-slate-800 py-2 items-center">
-                                    <span class="text-slate-300"><span class="bg-red-900/50 text-red-400 px-1 py-0.5 rounded text-[8px] mr-1 font-bold">CHI</span> <span class="text-slate-500 text-[8px] mr-1">[${formatTime(tx.id)}]</span> ${tx.reason} ${tx.payer ? `<span class="text-orange-400 ml-1 font-bold">(Hộ: ${getDisplayName(tx.payer)})</span>` : ''}</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-red-500 font-bold">-${fmt(tx.amount)}</span>
-                                        <button onclick="editFundTransaction(${tx.id}, 'out')" class="text-slate-500 hover:text-white px-2"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
-                                        <button onclick="deleteExpense(${tx.id})" class="text-slate-600 hover:text-red-500 font-bold px-2">&times;</button>
-                                    </div>
-                                </div>
-                            `).join('')}
+                            ${fundTxHtml}
                         </div>
                     </div>
                 </div>
@@ -832,21 +865,20 @@
         function editExtraDebt(id) {
             let item = state.extraDebts.find(x => x.id === id);
             if (item) {
-                customPrompt("Sửa Lý Do", "Nhập lý do mới:", item.reason, (newReason) => {
-                    if (newReason.trim() !== "") {
-                        setTimeout(() => {
-                            let currentAbsAmount = Math.abs(item.amount);
-                            customPrompt("Sửa Số Tiền", "Nhập số tiền mới:", currentAbsAmount, (newAmountStr) => {
-                                let newAmount = parseInt(newAmountStr);
-                                if (!isNaN(newAmount) && newAmount > 0) {
-                                    item.reason = newReason.trim();
-                                    item.amount = item.amount < 0 ? -newAmount : newAmount;
-                                    sync(); renderStats();
-                                } else {
-                                    setTimeout(() => customAlert("Lỗi", "Số tiền không hợp lệ!"), 300);
-                                }
-                            });
-                        }, 300);
+                customPrompt("Sửa Lý Do và Số Tiền", `Đang sửa cho: ${item.reason}\n\nNhập TÊN LÝ DO MỚI, kèm theo SỐ TIỀN MỚI cách nhau bằng dấu chấm phẩy (;).\n\nVí dụ: Vay tiền; 500000`, `${item.reason}; ${Math.abs(item.amount)}`, (val) => {
+                    let parts = val.split(';');
+                    if (parts.length >= 2) {
+                        let newReason = parts[0].trim();
+                        let newAmount = parseInt(parts[1].trim());
+                        if (newReason !== "" && !isNaN(newAmount) && newAmount > 0) {
+                            item.reason = newReason;
+                            item.amount = item.amount < 0 ? -newAmount : newAmount;
+                            sync(); renderStats();
+                        } else {
+                            customAlert("Lỗi", "Định dạng sai! Hãy nhập đúng kiểu: Lý do mới; Số tiền");
+                        }
+                    } else {
+                        customAlert("Lỗi", "Thiếu dấu chấm phẩy (;) để ngăn cách Lý do và Số tiền.");
                     }
                 });
             }
@@ -877,20 +909,20 @@
             let item = list.find(x => x.id === id);
             
             if (item) {
-                customPrompt("Sửa Lý Do", "Nhập lý do mới:", item.reason, (newReason) => {
-                    if (newReason.trim() !== "") {
-                        setTimeout(() => {
-                            customPrompt("Sửa Số Tiền", "Nhập số tiền mới:", item.amount, (newAmountStr) => {
-                                let newAmount = parseInt(newAmountStr);
-                                if (!isNaN(newAmount) && newAmount > 0) {
-                                    item.reason = newReason.trim();
-                                    item.amount = newAmount;
-                                    sync(); renderStats();
-                                } else {
-                                    setTimeout(() => customAlert("Lỗi", "Số tiền không hợp lệ!"), 300);
-                                }
-                            });
-                        }, 300);
+                customPrompt("Sửa Lý Do và Số Tiền", `Đang sửa cho: ${item.reason}\n\nNhập TÊN LÝ DO MỚI, kèm theo SỐ TIỀN MỚI cách nhau bằng dấu chấm phẩy (;).\n\nVí dụ: Mua bài; 150000`, `${item.reason}; ${item.amount}`, (val) => {
+                    let parts = val.split(';');
+                    if (parts.length >= 2) {
+                        let newReason = parts[0].trim();
+                        let newAmount = parseInt(parts[1].trim());
+                        if (newReason !== "" && !isNaN(newAmount) && newAmount > 0) {
+                            item.reason = newReason;
+                            item.amount = newAmount;
+                            sync(); renderStats();
+                        } else {
+                            customAlert("Lỗi", "Định dạng sai! Hãy nhập đúng kiểu: Lý do mới; Số tiền");
+                        }
+                    } else {
+                        customAlert("Lỗi", "Thiếu dấu chấm phẩy (;) để ngăn cách Lý do và Số tiền.");
                     }
                 });
             }
