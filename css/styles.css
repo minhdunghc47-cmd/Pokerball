@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+
+body { 
+    font-family: 'Plus Jakarta Sans', sans-serif; 
+    touch-action: manipulation; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+.glass-card { 
+    background: rgba(15, 23, 42, 0.6); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(51, 65, 85, 0.5); 
+}
+
+.btn-press:active { 
+    transform: scale(0.95); 
+}
+
+input::-webkit-inner-spin-button, 
+input::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+
+.hide-scroll::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* Modal Transitions */
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+/* SweetAlert customization for dark theme */
+div:where(.swal2-container) div:where(.swal2-popup) {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+    border-radius: 1.5rem !important;
+}
+div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+    background-color: #ea580c !important;
+    border-radius: 1rem !important;
+    font-weight: 800 !important;
+}
+div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+    border-radius: 1rem !important;
+    font-weight: 800 !important;
+}
