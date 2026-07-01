@@ -1,4 +1,4 @@
-import { getState, setState, subscribe, updatePlayer, setPlayerRank, deletePlayer, addPlayer, resetPlayers } from './state.js';
+import { getState, setState, subscribe, updatePlayer, setPlayerRank, deletePlayer, addPlayer, resetPlayers, deleteTransaction, updateTransaction } from './state.js';
 import { initFirebaseRealtime, syncToCloud } from './firebase.js';
 import { renderPlayers, renderMatchSummary, renderHistory, renderStatsAndBank } from './ui.js';
 import { validateMatch, calculateMatchSummary } from './logic.js';
@@ -215,8 +215,72 @@ document.addEventListener('DOMContentLoaded', () => {
         renderStatsAndBank();
     });
 
-    // Stats - Add Debt/Transaction
+    // Stats - Add/Edit/Delete Debt/Transaction
     document.getElementById('statsContent').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (btn && btn.hasAttribute('data-action')) {
+            const action = btn.getAttribute('data-action');
+            const type = btn.getAttribute('data-type');
+            const id = parseInt(btn.getAttribute('data-id'));
+            
+            if (action === 'delete-tx') {
+                Swal.fire({
+                    title: 'Bảo Mật',
+                    text: 'Nhập mật khẩu Thủ Quỹ để XÓA giao dịch này:',
+                    input: 'password',
+                    inputAttributes: { autocapitalize: 'off' },
+                    showCancelButton: true,
+                    confirmButtonText: 'XÓA',
+                    cancelButtonText: 'HỦY',
+                    preConfirm: (pwd) => {
+                        if (pwd !== '011187') Swal.showValidationMessage('Mật khẩu không chính xác!');
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        deleteTransaction(type, id);
+                        syncToCloud();
+                        Toast.fire({ icon: 'success', title: 'Đã xóa giao dịch' });
+                    }
+                });
+            } else if (action === 'edit-tx') {
+                const oldAmt = Math.abs(parseInt(btn.getAttribute('data-amount')));
+                Swal.fire({
+                    title: 'Sửa Giao Dịch',
+                    html: `
+                        <input id="swal-edit-amt" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold outline-none mb-3" value="${oldAmt}" placeholder="Nhập số tiền mới...">
+                        <input id="swal-edit-pwd" type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none" placeholder="Mật khẩu Thủ Quỹ...">
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'CẬP NHẬT',
+                    cancelButtonText: 'HỦY',
+                    preConfirm: () => {
+                        const newAmt = parseInt(document.getElementById('swal-edit-amt').value);
+                        const pwd = document.getElementById('swal-edit-pwd').value;
+                        if (pwd !== '011187') {
+                            Swal.showValidationMessage('Mật khẩu không chính xác!');
+                            return false;
+                        }
+                        if (isNaN(newAmt) || newAmt <= 0) {
+                            Swal.showValidationMessage('Số tiền không hợp lệ!');
+                            return false;
+                        }
+                        return newAmt;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const newAmt = result.value;
+                        const originalAmt = parseInt(btn.getAttribute('data-amount'));
+                        // Preserve sign
+                        const finalAmt = originalAmt < 0 ? -newAmt : newAmt;
+                        updateTransaction(type, id, { amount: finalAmt });
+                        syncToCloud();
+                        Toast.fire({ icon: 'success', title: 'Đã cập nhật giao dịch' });
+                    }
+                });
+            }
+            return;
+        }
+
         if (e.target.id === 'btn-add-debt') {
             const nameEl = document.getElementById('edName');
             const typeEl = document.getElementById('edType');

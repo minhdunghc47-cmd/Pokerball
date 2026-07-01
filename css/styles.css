@@ -51,3 +51,27 @@ div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
     border-radius: 1rem !important;
     font-weight: 800 !important;
 }
+
+/* Premium Casino Theme Additions */
+.glass-card {
+    background: linear-gradient(145deg, rgba(2, 44, 34, 0.6) 0%, rgba(9, 9, 11, 0.8) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(12px);
+}
+
+.gold-text {
+    background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(245, 158, 11, 0.2);
+}
+
+.velvet-red {
+    color: #e11d48;
+}
+
+body {
+    background: radial-gradient(circle at 50% 0%, #064e3b 0%, #09090b 80%);
+    background-attachment: fixed;
+}

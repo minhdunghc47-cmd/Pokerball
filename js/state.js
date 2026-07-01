@@ -75,3 +75,31 @@ export function addPlayer(name) {
     newState.players.push({ id: Date.now(), name: name, buy: 0, add: 0, bty: 0, rank: 0 });
     setState(newState);
 }
+
+export function deleteTransaction(type, id) {
+    const newState = { ...state };
+    if (type === 'debt') {
+        newState.extraDebts = newState.extraDebts.filter(x => x.id !== id);
+    } else if (type === 'in') {
+        newState.incomes = newState.incomes.filter(x => x.id !== id);
+    } else if (type === 'out') {
+        newState.expenses = newState.expenses.filter(x => x.id !== id);
+    }
+    setState(newState);
+}
+
+export function updateTransaction(type, id, newData) {
+    const newState = { ...state };
+    let arr;
+    if (type === 'debt') arr = newState.extraDebts;
+    else if (type === 'in') arr = newState.incomes;
+    else if (type === 'out') arr = newState.expenses;
+    
+    if (arr) {
+        const idx = arr.findIndex(x => x.id === id);
+        if (idx !== -1) {
+            arr[idx] = { ...arr[idx], ...newData };
+            setState(newState);
+        }
+    }
+}

@@ -8,36 +8,43 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- SweetAlert2 for nice toasts/alerts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .casino-font { font-family: 'Playfair Display', serif; }
+    </style>
 </head>
-<body class="pb-24 bg-slate-950 text-slate-50 font-sans">
+<body class="pb-24 bg-emerald-950 text-emerald-50">
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/80 z-[9999] flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
-        <div class="spinner mb-4 border-4 border-white/10 border-l-orange-500 rounded-full w-10 h-10 animate-spin"></div>
-        <div id="loadingText" class="text-orange-500 font-bold tracking-widest text-sm uppercase">Đang xử lý dữ liệu...</div>
+        <div class="spinner mb-4 border-4 border-white/10 border-l-amber-500 rounded-full w-10 h-10 animate-spin"></div>
+        <div id="loadingText" class="text-amber-500 font-bold tracking-widest text-sm uppercase">Đang xử lý dữ liệu...</div>
     </div>
 
     <!-- Top Navigation -->
-    <nav class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4">
+    <nav class="sticky top-0 z-50 bg-emerald-900/90 backdrop-blur-md border-b border-emerald-800 p-4">
         <div class="max-w-xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-br from-orange-500 to-red-600 p-2.5 rounded-xl shadow-lg shadow-orange-900/40">
-                    <i class="ph-fill ph-fire text-white text-lg"></i>
+                <div class="bg-gradient-to-br from-amber-500 to-amber-700 p-2.5 rounded-xl shadow-lg shadow-amber-900/40 border border-amber-400/30">
+                    <i class="ph-fill ph-club text-zinc-900 text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="font-black italic text-sm tracking-tighter uppercase">LCL <span class="text-orange-500">PRO v5.0</span></h1>
+                    <h1 class="casino-font font-black italic text-lg tracking-tighter uppercase gold-text">LCL PRO <span class="text-amber-500/50 text-sm">v5.1</span></h1>
                     <div class="flex items-center gap-1.5 mt-0.5">
-                        <div id="sync-indicator" class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest" id="cloud-status">Connecting...</p>
+                        <div id="sync-indicator" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <p class="text-[9px] font-bold text-emerald-400 uppercase tracking-widest" id="cloud-status">Connecting...</p>
                     </div>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button id="btn-stats" class="bg-slate-800 p-2.5 rounded-xl text-emerald-400 border border-slate-700 btn-press shadow-md hover:bg-slate-700 transition-colors">
+                <button id="btn-stats" class="bg-emerald-800 p-2.5 rounded-xl text-emerald-400 border border-emerald-700 btn-press shadow-md hover:bg-emerald-700 transition-colors">
                     <i class="ph-bold ph-chart-bar-horizontal text-lg"></i>
                 </button>
-                <button id="btn-history" class="bg-slate-800 p-2.5 rounded-xl text-blue-400 border border-slate-700 btn-press shadow-md hover:bg-slate-700 transition-colors">
+                <button id="btn-history" class="bg-emerald-800 p-2.5 rounded-xl text-blue-400 border border-emerald-700 btn-press shadow-md hover:bg-emerald-700 transition-colors">
                     <i class="ph-bold ph-clock-counter-clockwise text-lg"></i>
                 </button>
             </div>
@@ -49,8 +56,8 @@
         <!-- Players Tab View -->
         <div id="view-players" class="space-y-4 tab-content active fade-enter-active">
             <div class="flex gap-2">
-                <input type="text" id="inputName" placeholder="Thêm người chơi..." class="flex-1 bg-slate-900/80 border border-slate-700 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all placeholder-slate-500 shadow-inner">
-                <button id="btn-add-player" class="bg-orange-600 px-6 rounded-2xl font-black text-white shadow-lg shadow-orange-900/30 btn-press text-xl hover:bg-orange-500 transition-colors">+</button>
+                <input type="text" id="inputName" placeholder="Thêm người chơi..." class="flex-1 bg-emerald-900/80 border border-emerald-700 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all placeholder-slate-500 shadow-inner">
+                <button id="btn-add-player" class="bg-amber-600 px-6 rounded-2xl font-black text-white shadow-lg shadow-amber-900/30 btn-press text-xl hover:bg-amber-500 transition-colors">+</button>
             </div>
             <div id="playerList" class="space-y-3 mt-4">
                 <!-- Players will be rendered here -->
@@ -59,7 +66,7 @@
 
         <!-- Summary / Pay Tab View -->
         <div id="view-summary" class="space-y-4 tab-content hidden">
-            <div class="glass-card rounded-[2rem] p-6 border-l-4 border-orange-500 shadow-2xl relative overflow-hidden" id="prizeStats">
+            <div class="glass-card rounded-[2rem] p-6 border-l-4 border-amber-500 shadow-2xl relative overflow-hidden" id="prizeStats">
                 <!-- Prize Stats injected here -->
             </div>
             
@@ -71,8 +78,8 @@
                     <!-- Pay list injected here -->
                 </div>
                 
-                <div class="mt-6 pt-4 border-t border-slate-800/50">
-                    <div class="text-[10px] text-slate-400 mb-4 italic leading-relaxed">
+                <div class="mt-6 pt-4 border-t border-emerald-800/50">
+                    <div class="text-[10px] text-emerald-400 mb-4 italic leading-relaxed">
                         *Lưu ý: Đã bỏ tick Đã TT/Chưa TT. Kết quả lãi/lỗ của trận này sẽ được cộng thẳng vào <b>TỔNG NỢ GỘP</b>. Muốn thanh toán tiền mặt, hãy dùng tính năng "Công nợ ngoài" ở mục Thống kê.
                     </div>
                     <button id="btn-save-match" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-900/40 btn-press flex items-center justify-center gap-2 uppercase tracking-widest text-sm hover:from-emerald-500 hover:to-emerald-400 transition-all">
@@ -84,22 +91,22 @@
     </main>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-6 left-6 right-6 bg-slate-900/95 backdrop-blur-md border border-slate-700 p-2 rounded-[2rem] flex shadow-2xl shadow-black/50 max-w-xl mx-auto z-40">
-        <button id="tab-players" class="flex-1 py-3 rounded-[1.5rem] font-black text-[10px] uppercase flex flex-col items-center gap-1.5 transition-all text-white bg-slate-800 shadow-md">
+    <div class="fixed bottom-6 left-6 right-6 bg-emerald-900/95 backdrop-blur-md border border-emerald-700 p-2 rounded-[2rem] flex shadow-2xl shadow-black/50 max-w-xl mx-auto z-40">
+        <button id="tab-players" class="flex-1 py-3 rounded-[1.5rem] font-black text-[10px] uppercase flex flex-col items-center gap-1.5 transition-all text-white bg-emerald-800 shadow-md">
             <i class="ph-bold ph-users text-xl"></i> Bàn chơi
         </button>
-        <button id="tab-summary" class="flex-1 py-3 rounded-[1.5rem] font-black text-[10px] uppercase flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all bg-transparent">
+        <button id="tab-summary" class="flex-1 py-3 rounded-[1.5rem] font-black text-[10px] uppercase flex flex-col items-center gap-1.5 text-emerald-500 hover:text-emerald-200 transition-all bg-transparent">
             <i class="ph-bold ph-calculator text-xl"></i> Chốt trận
         </button>
     </div>
 
     <!-- History Modal -->
     <div id="modalHistory" class="modal fixed inset-0 bg-black/95 z-[100] hidden flex-col transition-opacity duration-300 opacity-0">
-        <div class="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md">
+        <div class="flex items-center justify-between p-5 border-b border-emerald-800 bg-emerald-900/50 backdrop-blur-md">
             <h2 class="text-blue-400 font-black uppercase tracking-widest text-sm flex items-center gap-2">
                 <i class="ph-bold ph-clock-counter-clockwise text-lg"></i> Lịch sử Tour
             </h2>
-            <button class="btn-close-modal text-slate-400 hover:text-white bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+            <button class="btn-close-modal text-emerald-400 hover:text-white bg-emerald-800 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
                 <i class="ph-bold ph-x text-xl"></i>
             </button>
         </div>
@@ -108,26 +115,26 @@
 
     <!-- Stats & Bank Modal -->
     <div id="modalStats" class="modal fixed inset-0 bg-black/95 z-[100] hidden flex-col transition-opacity duration-300 opacity-0">
-        <div class="flex flex-col p-5 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-10">
+        <div class="flex flex-col p-5 border-b border-emerald-800 bg-emerald-900/80 backdrop-blur-md sticky top-0 z-10">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-emerald-400 font-black uppercase tracking-widest text-sm flex items-center gap-2">
                     <i class="ph-bold ph-vault text-lg"></i> Quỹ & Công Nợ Gộp
                 </h2>
-                <button class="btn-close-modal text-slate-400 hover:text-white bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                <button class="btn-close-modal text-emerald-400 hover:text-white bg-emerald-800 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
                     <i class="ph-bold ph-x text-xl"></i>
                 </button>
             </div>
             <!-- Filters -->
             <div class="flex gap-2 items-end">
                 <div class="flex-1">
-                    <label class="text-[9px] text-slate-400 font-bold uppercase mb-1 block">Từ ngày</label>
-                    <input type="date" id="filterStartDate" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-orange-500 transition-colors">
+                    <label class="text-[9px] text-emerald-400 font-bold uppercase mb-1 block">Từ ngày</label>
+                    <input type="date" id="filterStartDate" class="w-full bg-emerald-800 border border-emerald-700 text-emerald-100 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-amber-500 transition-colors">
                 </div>
                 <div class="flex-1">
-                    <label class="text-[9px] text-slate-400 font-bold uppercase mb-1 block">Đến ngày</label>
-                    <input type="date" id="filterEndDate" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-orange-500 transition-colors">
+                    <label class="text-[9px] text-emerald-400 font-bold uppercase mb-1 block">Đến ngày</label>
+                    <input type="date" id="filterEndDate" class="w-full bg-emerald-800 border border-emerald-700 text-emerald-100 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-amber-500 transition-colors">
                 </div>
-                <button id="btn-clear-filter" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-md">Tất cả</button>
+                <button id="btn-clear-filter" class="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-md">Tất cả</button>
             </div>
         </div>
         <div id="statsContent" class="flex-1 overflow-y-auto p-4 space-y-6 pb-24"></div>
