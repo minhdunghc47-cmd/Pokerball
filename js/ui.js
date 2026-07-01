@@ -15,13 +15,13 @@ export function renderPlayers() {
         <div class="glass-card rounded-2xl p-4 space-y-3 shadow-lg">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${p.rank==1?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30':p.rank==2?'bg-slate-300 text-black':p.rank==3?'bg-orange-800 text-white':'bg-emerald-800 text-emerald-500'}">${p.rank||'#'}</div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${p.rank==1?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30':p.rank==2?'bg-slate-300 text-black':p.rank==3?'bg-orange-800 text-white':p.rank==4?'bg-emerald-600 text-white':p.rank==5?'bg-emerald-800 text-white':'bg-emerald-900 text-emerald-500 border border-emerald-800'}">${p.rank||'#'}</div>
                     <span class="font-black text-slate-100 text-base">${getDisplayName(p.name)}</span>
                 </div>
                 <button data-action="delete-player" data-id="${p.id}" class="text-slate-600 hover:text-red-500 p-2 transition-colors"><i class="ph-bold ph-trash text-lg"></i></button>
             </div>
-            <div class="grid grid-cols-3 gap-2">
-                ${[1,2,3].map(r => `<button data-action="set-rank" data-id="${p.id}" data-rank="${r}" class="py-2 rounded-xl text-[10px] font-black border transition-all ${p.rank==r?'bg-slate-200 text-black border-white shadow-md':'bg-emerald-900 text-emerald-500 border-emerald-800 hover:bg-emerald-800'}">GIẢI ${r}</button>`).join('')}
+            <div class="grid grid-cols-${state.players.reduce((s,x)=>s+x.buy+x.add,0)>=25 ? 5 : state.players.reduce((s,x)=>s+x.buy+x.add,0)>=20 ? 4 : 3} gap-2">
+                ${Array.from({length: state.players.reduce((s,x)=>s+x.buy+x.add,0)>=25 ? 5 : state.players.reduce((s,x)=>s+x.buy+x.add,0)>=20 ? 4 : 3}, (_,i)=>i+1).map(r => `<button data-action="set-rank" data-id="${p.id}" data-rank="${r}" class="py-2 rounded-xl text-[9px] font-black border transition-all ${p.rank==r?'bg-slate-200 text-black border-white shadow-md':'bg-emerald-900 text-emerald-500 border-emerald-800 hover:bg-emerald-800'}">GIẢI ${r}</button>`).join('')}
             </div>
             <div class="grid grid-cols-3 gap-2">
                 ${[['buy','B-IN','text-amber-500'],['add','A-ON','text-blue-400'],['bty','KILLS','text-emerald-400']].map(([f,l,c]) => `
@@ -119,9 +119,11 @@ export function renderHistory() {
                 </div>
                 <div class="flex flex-col gap-2 text-right">
                     <span class="text-emerald-500 uppercase">Prize Pool: <span class="text-orange-400 text-xs">${fmt(h.prizePool)}</span></span>
-                    <span class="text-emerald-400 uppercase">G1 (25%): <span class="text-yellow-500 text-xs">${fmt(h.prizes[0])}</span></span>
-                    <span class="text-emerald-400 uppercase">G2 (15%): <span class="text-emerald-100 text-xs">${fmt(h.prizes[1])}</span></span>
-                    <span class="text-emerald-400 uppercase">G3 (10%): <span class="text-orange-700 text-xs">${fmt(h.prizes[2])}</span></span>
+                    <span class="text-emerald-400 uppercase">G1: <span class="text-yellow-500 text-xs">${fmt(h.prizes[0]||0)}</span></span>
+                    <span class="text-emerald-400 uppercase">G2: <span class="text-emerald-100 text-xs">${fmt(h.prizes[1]||0)}</span></span>
+                    <span class="text-emerald-400 uppercase">G3: <span class="text-orange-700 text-xs">${fmt(h.prizes[2]||0)}</span></span>
+                    ${h.prizes[3] ? `<span class="text-emerald-400 uppercase">G4: <span class="text-emerald-400 text-xs">${fmt(h.prizes[3])}</span></span>` : ''}
+                    ${h.prizes[4] ? `<span class="text-emerald-400 uppercase">G5: <span class="text-emerald-400 text-xs">${fmt(h.prizes[4])}</span></span>` : ''}
                 </div>
             </div>
 
@@ -131,6 +133,8 @@ export function renderHistory() {
                     if(p.rank === 1) rankBadge = '<span class="bg-yellow-500 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 shadow-md font-black">NHẤT</span>';
                     if(p.rank === 2) rankBadge = '<span class="bg-slate-300 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">NHÌ</span>';
                     if(p.rank === 3) rankBadge = '<span class="bg-orange-800 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">BA</span>';
+                    if(p.rank === 4) rankBadge = '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-500">TƯ</span>';
+                    if(p.rank === 5) rankBadge = '<span class="bg-emerald-800 text-emerald-400 px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-600">NĂM</span>';
                     
                     return `
                     <div class="flex justify-between text-xs items-center py-2 border-b border-emerald-800/30 last:border-0">

@@ -44,7 +44,7 @@ export function calculateMatchSummary(players) {
     const payList = activePlayers.map(p => {
         let cost = (p.buy * CFG.BUYIN) + (p.add * CFG.ADDON);
         let btyEarned = p.bty * CFG.BTY;
-        let pr = p.rank > 0 ? prizes[p.rank - 1] : 0;
+        let pr = p.rank > 0 ? (prizes[p.rank - 1] || 0) : 0;
         let final = pr + btyEarned - cost;
         return { ...p, cost, final, pr, btyEarned };
     });
