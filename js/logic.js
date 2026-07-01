@@ -11,11 +11,8 @@ export function calculateMatchSummary(players) {
 
     let totalPool = (b + a) * CFG.TOUR; // Not counting BTY inside the pool calculation (BTY is 10k separate)
     let fund = totalPool * CFG.RATE;
-    if (CFG.FUND_CAP && fund > CFG.FUND_CAP) {
-        fund = CFG.FUND_CAP;
-    }
     let prizePool = totalPool - fund;
-    let prizes = CFG.PRIZES.map(v => prizePool * v);
+    let prizes = CFG.PRIZES.map(v => totalPool * v);
 
     const activePlayers = players.filter(p => p.buy > 0);
     const payList = activePlayers.map(p => {

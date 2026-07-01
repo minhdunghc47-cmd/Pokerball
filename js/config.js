@@ -4,8 +4,7 @@ export const CFG = {
     BTY: 10000, 
     ADDON: 50000, 
     RATE: 0.5, 
-    FUND_CAP: 500000,
-    PRIZES: [0.5, 0.3, 0.2] // Phân bổ 100% của phần Prize Pool còn lại
+    PRIZES: [0.25, 0.15, 0.1] 
 };
 
 export const DEFAULTS = ['Đại Ka “C”', 'Nhị ka “Y”', 'Tam ka “G”', 'Tứ ka “H”', 'Ngũ ka “T”', 'Lục ka “Q”', 'Cốc', 'Ly'];
