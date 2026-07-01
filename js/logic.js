@@ -11,8 +11,34 @@ export function calculateMatchSummary(players) {
 
     let totalPool = (b + a) * CFG.TOUR; // Not counting BTY inside the pool calculation (BTY is 10k separate)
     let fund = totalPool * CFG.RATE;
+    
+    // Capped Rake: Tối đa 500k
+    if (CFG.FUND_CAP && fund > CFG.FUND_CAP) {
+        fund = CFG.FUND_CAP;
+    }
+    
     let prizePool = totalPool - fund;
-    let prizes = CFG.PRIZES.map(v => totalPool * v);
+    let totalBuyinCount = b + a;
+    let prizes = [];
+    
+    // Dynamic Payout (Bubble Protection)
+    if (totalBuyinCount < 20) {
+        // Bàn đánh êm: Chỉ chia Top 3
+        prizes = CFG.PRIZES.map(v => prizePool * v);
+    } else if (totalBuyinCount >= 20 && totalBuyinCount < 25) {
+        // Bàn đánh rát: Hoàn 1 Buy-in cho Hạng 4, phần còn lại chia Top 3
+        let bubblePrize = CFG.BUYIN;
+        let remainingPool = prizePool - bubblePrize;
+        prizes = CFG.PRIZES.map(v => remainingPool * v);
+        prizes.push(bubblePrize);
+    } else {
+        // Bàn đẫm máu (>= 25 Buy-in): Hoàn 1 Buy-in cho Hạng 4 và Hạng 5, phần còn lại chia Top 3
+        let bubblePrize = CFG.BUYIN;
+        let remainingPool = prizePool - (bubblePrize * 2);
+        prizes = CFG.PRIZES.map(v => remainingPool * v);
+        prizes.push(bubblePrize); // Hạng 4
+        prizes.push(bubblePrize); // Hạng 5
+    }
 
     const activePlayers = players.filter(p => p.buy > 0);
     const payList = activePlayers.map(p => {

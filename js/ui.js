@@ -59,8 +59,8 @@ export function renderMatchSummary() {
                 </div>
             </div>
             <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-2">
-                <span>Giải (Nhất/Nhì/Ba)</span>
-                <span class="text-xs font-black text-amber-400">${fmt(summary.prizes[0])} / ${fmt(summary.prizes[1])} / ${fmt(summary.prizes[2])}</span>
+                <span>Giải (${summary.prizes.length === 5 ? 'Nhất/Nhì/Ba/Tư/Năm' : summary.prizes.length === 4 ? 'Nhất/Nhì/Ba/Tư' : 'Nhất/Nhì/Ba'})</span>
+                <span class="text-xs font-black text-amber-400">${summary.prizes.map(p => fmt(p)).join(' / ')}</span>
             </div>
             <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase">
                 <span>Trích quỹ (Rake)</span>
