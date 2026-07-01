@@ -48,9 +48,23 @@ export function renderMatchSummary() {
                 <span class="text-[10px] font-black text-emerald-400 uppercase">Prize Pool</span>
                 <span class="text-2xl font-black text-amber-500">${fmt(summary.prizePool)}</span>
             </div>
+            <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-emerald-800/50">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-bold text-emerald-600 uppercase mb-1">Buy-ins</span>
+                    <span class="text-base font-black text-emerald-100">${summary.totalBuyins}</span>
+                </div>
+                <div class="flex flex-col text-right">
+                    <span class="text-[9px] font-bold text-emerald-600 uppercase mb-1">Add-ons</span>
+                    <span class="text-base font-black text-emerald-100">${summary.totalAddons}</span>
+                </div>
+            </div>
+            <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-2">
+                <span>Giải (Nhất/Nhì/Ba)</span>
+                <span class="text-xs font-black text-amber-400">${fmt(summary.prizes[0])} / ${fmt(summary.prizes[1])} / ${fmt(summary.prizes[2])}</span>
+            </div>
             <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase">
-                <span>Trích quỹ</span>
-                <span class="text-base font-black">+${fmt(summary.fund)}</span>
+                <span>Trích quỹ (Rake)</span>
+                <span class="text-base font-black text-emerald-400">+${fmt(summary.fund)}</span>
             </div>
             <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mt-2 pt-2 border-t border-emerald-800/50">
                 <span>Tổng Mạng (Bounty)</span>
