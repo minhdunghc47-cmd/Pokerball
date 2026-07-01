@@ -1,4 +1,4 @@
-import { DEFAULTS } from './config.js';
+import { DEFAULTS, getDisplayName } from './config.js';
 
 let state = JSON.parse(localStorage.getItem('LCL_V5_DATA')) || {
     players: DEFAULTS.map((n, i) => ({ id: i, name: n, buy: 0, add: 0, bty: 0, rank: 0 })),
@@ -61,6 +61,38 @@ export function setPlayerRank(id, rank) {
             p.rank = 0; // Clear other player's rank if assigned
         }
     });
+    setState(newState);
+}
+
+
+export function loadMatchForEditing(matchId) {
+    const newState = { ...state };
+    const match = newState.history.find(m => m.id === matchId);
+    if (!match) return false;
+    
+    newState.editingMatchId = matchId;
+    
+    // Map data to players
+    newState.players = DEFAULTS.map((n, i) => {
+        let oldP = match.players.find(x => getDisplayName(x.name) === getDisplayName(n));
+        return { 
+            id: Date.now() + i, 
+            name: n, 
+            buy: oldP ? oldP.buy : 0, 
+            add: oldP ? (oldP.add || 0) : 0, 
+            bty: oldP ? (oldP.bty || 0) : 0, 
+            rank: oldP ? (oldP.rank || 0) : 0 
+        };
+    });
+    
+    setState(newState);
+    return true;
+}
+
+export function cancelEditMatch() {
+    const newState = { ...state };
+    newState.editingMatchId = null;
+    newState.players = DEFAULTS.map((n, i) => ({ id: Date.now()+i, name: n, buy: 0, add: 0, bty: 0, rank: 0 }));
     setState(newState);
 }
 

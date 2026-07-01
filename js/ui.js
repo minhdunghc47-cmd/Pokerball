@@ -107,6 +107,7 @@ export function renderHistory() {
                     <div class="text-[9px] text-emerald-500 font-bold mt-1">${h.date}</div>
                 </div>
                 <div class="flex gap-2">
+                    <button data-action="edit-match" data-id="${h.id}" class="text-amber-500 hover:text-amber-400 bg-emerald-800 w-8 h-8 rounded-lg border border-emerald-700 flex items-center justify-center transition-colors"><i class="ph-bold ph-pencil-simple text-sm"></i></button>
                     <button data-action="delete-match" data-id="${h.id}" class="text-emerald-400 hover:text-red-500 bg-emerald-800 w-8 h-8 rounded-lg border border-emerald-700 flex items-center justify-center transition-colors"><i class="ph-bold ph-trash text-sm"></i></button>
                 </div>
             </div>

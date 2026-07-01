@@ -82,9 +82,19 @@
                     <div class="text-[10px] text-emerald-400 mb-4 italic leading-relaxed">
                         *Lưu ý: Đã bỏ tick Đã TT/Chưa TT. Kết quả lãi/lỗ của trận này sẽ được cộng thẳng vào <b>TỔNG NỢ GỘP</b>. Muốn thanh toán tiền mặt, hãy dùng tính năng "Công nợ ngoài" ở mục Thống kê.
                     </div>
-                    <button id="btn-save-match" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-900/40 btn-press flex items-center justify-center gap-2 uppercase tracking-widest text-sm hover:from-emerald-500 hover:to-emerald-400 transition-all">
-                        <i class="ph-bold ph-check-circle text-xl"></i> Chốt & Lưu Lịch Sử
-                    </button>
+                    <div id="save-match-container">
+                        <button id="btn-save-match" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-900/40 btn-press flex items-center justify-center gap-2 uppercase tracking-widest text-sm hover:from-emerald-500 hover:to-emerald-400 transition-all">
+                            <i class="ph-bold ph-check-circle text-xl"></i> Chốt & Lưu Lịch Sử
+                        </button>
+                    </div>
+                    <div id="edit-match-container" class="hidden flex gap-2">
+                        <button id="btn-cancel-edit" class="bg-slate-700 text-white font-black py-5 px-6 rounded-2xl shadow-xl hover:bg-slate-600 transition-all">
+                            <i class="ph-bold ph-x text-xl"></i> HỦY
+                        </button>
+                        <button id="btn-update-match" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-amber-900/40 btn-press flex items-center justify-center gap-2 uppercase tracking-widest text-sm hover:from-amber-500 hover:to-amber-400 transition-all">
+                            <i class="ph-bold ph-pencil-simple text-xl"></i> Cập Nhật Trận <span id="edit-match-id"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

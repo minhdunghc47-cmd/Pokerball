@@ -1,4 +1,4 @@
-import { getState, setState, subscribe, updatePlayer, setPlayerRank, deletePlayer, addPlayer, resetPlayers, deleteTransaction, updateTransaction } from './state.js';
+import { getState, setState, subscribe, updatePlayer, setPlayerRank, deletePlayer, addPlayer, resetPlayers, deleteTransaction, updateTransaction, loadMatchForEditing, cancelEditMatch } from './state.js';
 import { initFirebaseRealtime, syncToCloud } from './firebase.js';
 import { renderPlayers, renderMatchSummary, renderHistory, renderStatsAndBank } from './ui.js';
 import { validateMatch, calculateMatchSummary } from './logic.js';
@@ -124,8 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Save Match
-    document.getElementById('btn-save-match').addEventListener('click', () => {
+    // Save Match & Edit Match Logic
+    const performSaveMatch = (isEditing = false) => {
         const state = getState();
         const v = validateMatch(state.players);
         if (!v.valid) {
@@ -134,47 +134,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         Swal.fire({
-            title: 'Chốt trận?',
-            text: "Lưu kết quả (Tổng lợi nhuận sẽ tự động cộng vào Nợ Gộp) và làm mới bàn chơi?",
+            title: isEditing ? 'Cập nhật trận đấu?' : 'Chốt trận?',
+            text: isEditing ? "Ghi đè thông số mới vào trận đã chọn?" : "Lưu kết quả (Tổng lợi nhuận sẽ tự động cộng vào Nợ Gộp) và làm mới bàn chơi?",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'CHỐT NGAY',
+            confirmButtonText: isEditing ? 'CẬP NHẬT' : 'CHỐT NGAY',
             cancelButtonText: 'HỦY'
         }).then((result) => {
             if (result.isConfirmed) {
                 const summary = calculateMatchSummary(state.players);
-                
-                let maxMatch = state.history.length > 0 ? Math.max(...state.history.map(m => m.matchNumber || 0)) : 0;
+                const newState = { ...state };
                 
                 const snapshot = state.players.filter(p => p.buy > 0).map(p => {
                     let s = summary.payList.find(x => x.id === p.id);
                     return { ...p, final: s.final }; // Keep rank, buy, add, bty, final
                 });
 
-                const newMatch = {
-                    id: Date.now(),
-                    matchNumber: maxMatch + 1,
-                    date: new Date().toLocaleString('vi-VN'),
-                    fund: summary.fund,
-                    prizePool: summary.prizePool,
-                    prizes: summary.prizes,
-                    tB: summary.totalBuyins,
-                    tA: summary.totalAddons,
-                    tBty: summary.totalBtyTokens,
-                    players: snapshot
-                };
+                if (isEditing) {
+                    const matchIdx = newState.history.findIndex(m => m.id === state.editingMatchId);
+                    if (matchIdx !== -1) {
+                        newState.history[matchIdx] = {
+                            ...newState.history[matchIdx],
+                            fund: summary.fund,
+                            prizePool: summary.prizePool,
+                            prizes: summary.prizes,
+                            tB: summary.totalBuyins,
+                            tA: summary.totalAddons,
+                            tBty: summary.totalBtyTokens,
+                            players: snapshot
+                        };
+                    }
+                    newState.editingMatchId = null;
+                } else {
+                    let maxMatch = state.history.length > 0 ? Math.max(...state.history.map(m => m.matchNumber || 0)) : 0;
+                    const newMatch = {
+                        id: Date.now(),
+                        matchNumber: maxMatch + 1,
+                        date: new Date().toLocaleString('vi-VN'),
+                        fund: summary.fund,
+                        prizePool: summary.prizePool,
+                        prizes: summary.prizes,
+                        tB: summary.totalBuyins,
+                        tA: summary.totalAddons,
+                        tBty: summary.totalBtyTokens,
+                        players: snapshot
+                    };
+                    newState.history.push(newMatch);
+                }
 
-                const newState = { ...state };
-                newState.history.push(newMatch);
-                // Reset players for new match
+                // Reset players
                 newState.players = DEFAULTS.map((n, i) => ({ id: Date.now()+i, name: n, buy: 0, add: 0, bty: 0, rank: 0 }));
                 
                 setState(newState);
                 syncToCloud();
+                
+                // Reset UI
+                document.getElementById('save-match-container').classList.remove('hidden');
+                document.getElementById('edit-match-container').classList.add('hidden');
+                document.getElementById('edit-match-container').classList.remove('flex');
+                
                 switchTab('players');
-                Toast.fire({ icon: 'success', title: 'Đã lưu trận thành công!' });
+                Toast.fire({ icon: 'success', title: isEditing ? 'Đã cập nhật trận đấu!' : 'Đã lưu trận thành công!' });
             }
         });
+    };
+
+    document.getElementById('btn-save-match').addEventListener('click', () => performSaveMatch(false));
+    document.getElementById('btn-update-match').addEventListener('click', () => performSaveMatch(true));
+    document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+        cancelEditMatch();
+        document.getElementById('save-match-container').classList.remove('hidden');
+        document.getElementById('edit-match-container').classList.add('hidden');
+        document.getElementById('edit-match-container').classList.remove('flex');
+        switchTab('players');
     });
 
     // History Actions
@@ -185,7 +217,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = btn.getAttribute('data-action');
         const id = parseInt(btn.getAttribute('data-id'));
         
-        if (action === 'delete-match') {
+        if (action === 'edit-match') {
+            const state = getState();
+            const hasActiveData = state.players.some(p => p.buy > 0 || p.add > 0 || p.bty > 0 || p.rank > 0);
+            
+            const doEdit = () => {
+                const match = state.history.find(m => m.id === id);
+                if (match && loadMatchForEditing(id)) {
+                    document.getElementById('edit-match-id').innerText = '#' + (match.matchNumber || 0);
+                    document.getElementById('save-match-container').classList.add('hidden');
+                    document.getElementById('edit-match-container').classList.remove('hidden');
+                    document.getElementById('edit-match-container').classList.add('flex');
+                    closeModal('modalHistory');
+                    switchTab('players');
+                }
+            };
+            
+            if (hasActiveData && state.editingMatchId !== id) {
+                Swal.fire({
+                    title: 'Đang có trận đánh dở!',
+                    text: 'Nếu bạn sửa trận cũ, dữ liệu trận đang đánh trên bàn sẽ bị xoá. Tiếp tục?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'XÓA & SỬA TRẬN',
+                    cancelButtonText: 'HỦY'
+                }).then((r) => { if (r.isConfirmed) doEdit(); });
+            } else {
+                doEdit();
+            }
+        } else if (action === 'delete-match') {
             Swal.fire({
                 title: 'Xóa trận này?',
                 text: "Xóa sẽ ảnh hưởng đến công nợ, bạn chắc chứ?",
