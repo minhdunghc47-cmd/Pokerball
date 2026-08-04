@@ -1,4 +1,4 @@
-import { CFG, getDisplayName } from './config.js';
+import { CFG, getDisplayName, DEFAULTS } from './config.js';
 import { getState, setState } from './state.js';
 
 export function calculateMatchSummary(players) {
@@ -83,6 +83,13 @@ export function calculateOverallStats(startTs = 0, endTs = Number.MAX_SAFE_INTEG
     
     let stats = {}; 
     let nD = {}; // Net Debt (Công nợ gộp)
+    
+    // Initialize stats and nD for all default players so they appear even if they haven't played yet
+    DEFAULTS.forEach(n => {
+        let name = getDisplayName(n);
+        stats[name] = { tours: 0, buyins: 0, addons: 0, kills: 0, cost: 0, rank1: 0, rank2: 0, rank3: 0, revenue: 0, profit: 0, prize1: 0, prize2: 0, prize3: 0 };
+        nD[name] = 0;
+    });
     
     let cashIn = 0;
     let cashOut = 0;

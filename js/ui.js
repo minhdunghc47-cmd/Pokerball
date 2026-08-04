@@ -6,6 +6,12 @@ function fmt(num) {
     return num.toLocaleString('vi-VN');
 }
 
+export let fundTxLimit = 10;
+export function increaseFundTxLimit() {
+    fundTxLimit += 10;
+    renderStatsAndBank();
+}
+
 export function renderPlayers() {
     const state = getState();
     const container = document.getElementById('playerList');
@@ -236,7 +242,9 @@ export function renderStatsAndBank() {
         ...filteredExpenses.map(e => ({ ...e, txType: 'out' }))
     ].sort((a, b) => b.id - a.id);
 
-    let fundTxHtml = combinedFundTx.slice(0, 10).map(tx => tx.txType === 'in' ? `
+    let hasMoreFundTx = combinedFundTx.length > fundTxLimit;
+
+    let fundTxHtml = combinedFundTx.slice(0, fundTxLimit).map(tx => tx.txType === 'in' ? `
         <div class="flex justify-between text-[10px] border-b border-zinc-800/50 py-3 items-center group">
             <span class="text-zinc-300"><span class="bg-amber-900/40 text-amber-400 px-1.5 py-0.5 rounded text-[8px] mr-2 font-black border border-amber-500/20">THU</span> ${tx.reason}</span>
             <div class="flex items-center gap-3">
@@ -303,7 +311,9 @@ export function renderStatsAndBank() {
                 <button id="btn-add-fund" class="w-full bg-emerald-700 px-6 py-3 rounded-xl text-white font-black hover:bg-emerald-600 transition-colors shadow-lg border border-emerald-600">LƯU THU/CHI QUỸ</button>
             </div>
 
-            ${fundTxHtml ? `<div class="mt-4 pt-4 border-t border-emerald-800"><h4 class="text-[9px] text-emerald-500 font-bold uppercase mb-2">Lịch sử thu/chi quỹ</h4>${fundTxHtml}</div>` : ''}
+            ${fundTxHtml ? `<div class="mt-4 pt-4 border-t border-emerald-800"><h4 class="text-[9px] text-emerald-500 font-bold uppercase mb-2">Lịch sử thu/chi quỹ</h4>${fundTxHtml}
+            ${hasMoreFundTx ? `<button id="btn-load-more-fund" class="w-full mt-3 py-3 text-[10px] bg-emerald-950 text-emerald-500 border border-emerald-800 rounded-xl font-bold hover:bg-emerald-900 transition-colors uppercase tracking-widest"><i class="ph-bold ph-caret-down mr-1"></i> XEM THÊM 10 GIAO DỊCH</button>` : ''}
+            </div>` : ''}
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-6">

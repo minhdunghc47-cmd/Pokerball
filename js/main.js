@@ -452,6 +452,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     Toast.fire({ icon: 'success', title: 'Đã lưu thu/chi quỹ' });
                 }
             });
+        } else if (e.target.closest('#btn-load-more-fund')) {
+            Swal.fire({
+                title: 'Yêu Cầu Mật Khẩu',
+                text: 'Nhập mật khẩu Thủ Quỹ để xem thêm lịch sử:',
+                input: 'password',
+                inputAttributes: { autocapitalize: 'off' },
+                showCancelButton: true,
+                confirmButtonText: 'XÁC NHẬN',
+                cancelButtonText: 'HỦY',
+                preConfirm: (pwd) => {
+                    if (pwd !== '011187') {
+                        Swal.showValidationMessage('Mật khẩu không chính xác!');
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    import('./ui.js').then(ui => ui.increaseFundTxLimit());
+                }
+            });
         }
     });
 });
