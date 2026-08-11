@@ -304,9 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else if (action === 'edit-tx') {
                 const oldAmt = Math.abs(parseInt(btn.getAttribute('data-amount')));
+                const oldReason = btn.getAttribute('data-reason') || '';
                 Swal.fire({
                     title: 'Sửa Giao Dịch',
                     html: `
+                        <input id="swal-edit-reason" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none mb-3" value="${oldReason}" placeholder="Nội dung giao dịch...">
                         <input id="swal-edit-amt" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold outline-none mb-3" value="${oldAmt}" placeholder="Nhập số tiền mới...">
                         <input id="swal-edit-pwd" type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none" placeholder="Mật khẩu Thủ Quỹ...">
                     `,
@@ -315,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cancelButtonText: 'HỦY',
                     preConfirm: () => {
                         const newAmt = parseInt(document.getElementById('swal-edit-amt').value);
+                        const newReason = document.getElementById('swal-edit-reason').value.trim();
                         const pwd = document.getElementById('swal-edit-pwd').value;
                         if (pwd !== '011187') {
                             Swal.showValidationMessage('Mật khẩu không chính xác!');
@@ -324,15 +327,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             Swal.showValidationMessage('Số tiền không hợp lệ!');
                             return false;
                         }
-                        return newAmt;
+                        if (!newReason) {
+                            Swal.showValidationMessage('Vui lòng nhập nội dung!');
+                            return false;
+                        }
+                        return { newAmt, newReason };
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        const newAmt = result.value;
+                        const { newAmt, newReason } = result.value;
                         const originalAmt = parseInt(btn.getAttribute('data-amount'));
                         // Preserve sign
                         const finalAmt = originalAmt < 0 ? -newAmt : newAmt;
-                        updateTransaction(type, id, { amount: finalAmt });
+                        updateTransaction(type, id, { amount: finalAmt, reason: newReason });
                         syncToCloud();
                         Toast.fire({ icon: 'success', title: 'Đã cập nhật giao dịch' });
                     }

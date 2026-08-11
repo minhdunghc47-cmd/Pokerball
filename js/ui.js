@@ -230,7 +230,7 @@ export function renderStatsAndBank() {
             <div class="flex items-center gap-3">
                 <span class="font-bold text-sm ${ed.amount >= 0 ? 'text-amber-400' : 'text-rose-500'}">${ed.amount > 0 ? '+' : ''}${fmt(ed.amount)}</span>
                 <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button data-action="edit-tx" data-type="debt" data-id="${ed.id}" data-amount="${ed.amount}" class="text-zinc-500 hover:text-amber-400"><i class="ph-bold ph-pencil"></i></button>
+                    <button data-action="edit-tx" data-type="debt" data-id="${ed.id}" data-amount="${ed.amount}" data-reason="${ed.reason}" class="text-zinc-500 hover:text-amber-400"><i class="ph-bold ph-pencil"></i></button>
                     <button data-action="delete-tx" data-type="debt" data-id="${ed.id}" class="text-zinc-500 hover:text-rose-500"><i class="ph-bold ph-trash"></i></button>
                 </div>
             </div>
@@ -250,7 +250,7 @@ export function renderStatsAndBank() {
             <div class="flex items-center gap-3">
                 <span class="text-amber-400 font-bold text-sm">+${fmt(tx.amount)}</span>
                 <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button data-action="edit-tx" data-type="in" data-id="${tx.id}" data-amount="${tx.amount}" class="text-zinc-500 hover:text-amber-400"><i class="ph-bold ph-pencil"></i></button>
+                    <button data-action="edit-tx" data-type="in" data-id="${tx.id}" data-amount="${tx.amount}" data-reason="${tx.reason}" class="text-zinc-500 hover:text-amber-400"><i class="ph-bold ph-pencil"></i></button>
                     <button data-action="delete-tx" data-type="in" data-id="${tx.id}" class="text-zinc-500 hover:text-rose-500"><i class="ph-bold ph-trash"></i></button>
                 </div>
             </div>
@@ -261,7 +261,7 @@ export function renderStatsAndBank() {
             <div class="flex items-center gap-3">
                 <span class="text-rose-500 font-bold text-sm">-${fmt(tx.amount)}</span>
                 <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button data-action="edit-tx" data-type="out" data-id="${tx.id}" data-amount="${tx.amount}" class="text-zinc-500 hover:text-amber-400"><i class="ph-bold ph-pencil"></i></button>
+                    <button data-action="edit-tx" data-type="out" data-id="${tx.id}" data-amount="${tx.amount}" data-reason="${tx.reason}" class="text-zinc-500 hover:text-amber-400"><i class="ph-bold ph-pencil"></i></button>
                     <button data-action="delete-tx" data-type="out" data-id="${tx.id}" class="text-zinc-500 hover:text-rose-500"><i class="ph-bold ph-trash"></i></button>
                 </div>
             </div>

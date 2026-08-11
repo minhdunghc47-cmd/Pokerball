@@ -8,7 +8,7 @@ export const CFG = {
     PRIZES: [0.5, 0.3, 0.2] // Top 3 chia 100% của phần Prize Pool
 };
 
-export const DEFAULTS = ['Đại Ka “C”', 'Nhị ka “Y”', 'Tam ka “G”', 'Tứ ka “H”', 'Ngũ ka “T”', 'Lục ka “Q”', 'Cốc', 'Ly', 'Khách'];
+export const DEFAULTS = ['Đại Ka “C”', 'Nhị ka “Y”', 'Tam ka “G”', 'Tứ ka “H”', 'Ngũ ka “T”', 'Lục ka “Q”', 'Cốc', 'Ly'];
 
 export const MIGRATION_MAP = {
     'Cảnh': 'Đại Ka “C”',

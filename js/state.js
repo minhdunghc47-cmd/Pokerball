@@ -85,6 +85,20 @@ export function loadMatchForEditing(matchId) {
         };
     });
     
+    // Add players that were in the match but are no longer in DEFAULTS
+    match.players.forEach((oldP, i) => {
+        if (!DEFAULTS.find(n => getDisplayName(n) === getDisplayName(oldP.name))) {
+            newState.players.push({
+                id: Date.now() + 100 + i,
+                name: oldP.name,
+                buy: oldP.buy,
+                add: oldP.add || 0,
+                bty: oldP.bty || 0,
+                rank: oldP.rank || 0
+            });
+        }
+    });
+    
     setState(newState);
     return true;
 }
