@@ -209,12 +209,14 @@ export function renderStatsAndBank() {
     }).map(n => {
         let s = stats[n];
         let winRate = s.tours > 0 ? (((s.rank1 + s.rank2 + s.rank3) / s.tours) * 100).toFixed(1) : 0;
+        let roi = s.cost > 0 ? ((s.profit / s.cost) * 100).toFixed(1) : 0;
         return `
         <div class="glass-card rounded-2xl p-5 mb-4 border-l-4 ${s.profit >= 0 ? 'border-emerald-500' : 'border-red-500'} bg-emerald-900/40">
             <div class="flex justify-between items-center border-b border-emerald-800 pb-3 mb-4">
                 <span class="text-base font-black text-white">${n}</span>
                 <div class="flex flex-col items-end gap-1">
-                    <span class="text-[10px] bg-emerald-800 px-2 py-1 rounded text-emerald-200 font-bold border border-emerald-700">Tham gia: ${s.tours} Tour</span>
+                    <span class="text-[10px] bg-emerald-800 px-2 py-1 rounded text-emerald-200 font-bold border border-emerald-700 mb-1">Tham gia: ${s.tours} Tour</span>
+                    <span class="text-[9px] text-emerald-400 font-bold uppercase">ROI (Tỷ suất): <span class="${roi >= 0 ? 'text-emerald-400' : 'text-red-400'}">${roi}%</span></span>
                     <span class="text-[9px] text-emerald-400 font-bold uppercase">ITM (Có giải): ${winRate}%</span>
                 </div>
             </div>
