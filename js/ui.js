@@ -156,6 +156,13 @@ export function renderHistory() {
         </div>`).join('');
 }
 
+export let currentSortMethod = 'profit';
+
+export function setSortMethod(method) {
+    currentSortMethod = method;
+    renderStatsAndBank();
+}
+
 export function renderStatsAndBank() {
     const filterStart = document.getElementById('filterStartDate').value;
     const filterEnd = document.getElementById('filterEndDate').value;
@@ -178,7 +185,28 @@ export function renderStatsAndBank() {
     const container = document.getElementById('statsContent');
     if (!container) return;
 
-    let statsHtml = Object.keys(stats).sort((a,b) => stats[b].profit - stats[a].profit).map(n => {
+    let statsHtml = Object.keys(stats).sort((a, b) => {
+        let sA = stats[a], sB = stats[b];
+        if (currentSortMethod === 'profit') return sB.profit - sA.profit;
+        if (currentSortMethod === 'roi') {
+            let roiA = sA.cost > 0 ? (sA.profit / sA.cost) : (sA.profit > 0 ? 999 : -999);
+            let roiB = sB.cost > 0 ? (sB.profit / sB.cost) : (sB.profit > 0 ? 999 : -999);
+            // Tie breaker: profit
+            if (roiB === roiA) return sB.profit - sA.profit;
+            return roiB - roiA;
+        }
+        if (currentSortMethod === 'itm') {
+            let itmA = sA.tours > 0 ? ((sA.rank1 + sA.rank2 + sA.rank3) / sA.tours) : 0;
+            let itmB = sB.tours > 0 ? ((sB.rank1 + sB.rank2 + sB.rank3) / sB.tours) : 0;
+            if (itmB === itmA) return sB.profit - sA.profit;
+            return itmB - itmA;
+        }
+        if (currentSortMethod === 'tours') {
+            if (sB.tours === sA.tours) return sB.profit - sA.profit;
+            return sB.tours - sA.tours;
+        }
+        return sB.profit - sA.profit;
+    }).map(n => {
         let s = stats[n];
         let winRate = s.tours > 0 ? (((s.rank1 + s.rank2 + s.rank3) / s.tours) * 100).toFixed(1) : 0;
         return `

@@ -1,6 +1,6 @@
 import { getState, setState, subscribe, updatePlayer, setPlayerRank, deletePlayer, addPlayer, resetPlayers, deleteTransaction, updateTransaction, loadMatchForEditing, cancelEditMatch } from './state.js';
 import { initFirebaseRealtime, syncToCloud } from './firebase.js';
-import { renderPlayers, renderMatchSummary, renderHistory, renderStatsAndBank } from './ui.js';
+import { renderPlayers, renderMatchSummary, renderHistory, renderStatsAndBank, setSortMethod } from './ui.js';
 import { validateMatch, calculateMatchSummary } from './logic.js';
 import { CFG, DEFAULTS } from './config.js';
 
@@ -269,9 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Stats Filters
     document.getElementById('filterStartDate').addEventListener('change', renderStatsAndBank);
     document.getElementById('filterEndDate').addEventListener('change', renderStatsAndBank);
+    document.getElementById('sortMethod').addEventListener('change', (e) => setSortMethod(e.target.value));
     document.getElementById('btn-clear-filter').addEventListener('click', () => {
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
+        document.getElementById('sortMethod').value = 'profit';
+        setSortMethod('profit');
         renderStatsAndBank();
     });
 
