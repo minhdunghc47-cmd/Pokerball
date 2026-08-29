@@ -196,11 +196,14 @@ export function renderStatsAndBank() {
                 <div class="text-emerald-400">Mạng (Kill): <span class="font-black text-emerald-400 ml-1">${s.kills}</span></div>
                 <div class="text-emerald-400">Tổng Vốn: <span class="font-black text-red-400 ml-1">${fmt(s.cost)}</span></div>
                 
-                <div class="text-emerald-500 col-span-2 mt-2 pt-3 border-t border-emerald-800/50 font-bold uppercase tracking-widest text-[9px]">Thành tích các giải:</div>
+                <div class="text-emerald-500 col-span-2 mt-2 pt-3 border-t border-emerald-800/50 font-bold uppercase tracking-widest text-[9px]">Thành tích các giải & Bounty:</div>
                 <div class="text-emerald-400">Nhất <span class="text-[9px]">(${s.rank1})</span>: <span class="font-black text-yellow-500 ml-1">${fmt(s.prize1)}</span></div>
-                <div class="text-emerald-400">Nhì <span class="text-[9px]">(${s.rank2})</span>: <span class="font-black text-emerald-200 ml-1">${fmt(s.prize2)}</span></div>
+                <div class="text-emerald-400">Nhì <span class="text-[9px]">(${s.rank2})</span>: <span class="font-black text-emerald-100 ml-1">${fmt(s.prize2)}</span></div>
                 <div class="text-emerald-400">Ba <span class="text-[9px]">(${s.rank3})</span>: <span class="font-black text-orange-700 ml-1">${fmt(s.prize3)}</span></div>
-                <div class="text-emerald-400">Tổng Tiền Giải: <span class="font-black text-emerald-400 ml-1">${fmt(s.prize1 + s.prize2 + s.prize3)}</span></div>
+                ${s.prize4 > 0 ? `<div class="text-emerald-400">Tư <span class="text-[9px]">(${s.rank4})</span>: <span class="font-black text-emerald-400 ml-1">${fmt(s.prize4)}</span></div>` : ''}
+                ${s.prize5 > 0 ? `<div class="text-emerald-400">Năm <span class="text-[9px]">(${s.rank5})</span>: <span class="font-black text-emerald-400 ml-1">${fmt(s.prize5)}</span></div>` : ''}
+                ${s.btyMoney > 0 ? `<div class="text-emerald-400">Tiền Mạng <span class="text-[9px]">(${s.kills})</span>: <span class="font-black text-emerald-400 ml-1">${fmt(s.btyMoney)}</span></div>` : ''}
+                <div class="text-emerald-400 ${s.prize4>0||s.prize5>0||s.btyMoney>0 ? 'col-span-2 mt-1' : ''}">Tổng Thu: <span class="font-black text-emerald-400 ml-1">${fmt(s.revenue)}</span></div>
             </div>
             <div class="flex justify-between items-center bg-emerald-950/50 p-3 rounded-xl border border-emerald-800/50">
                 <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Lợi nhuận gộp:</span>

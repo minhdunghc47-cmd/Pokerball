@@ -87,7 +87,7 @@ export function calculateOverallStats(startTs = 0, endTs = Number.MAX_SAFE_INTEG
     // Initialize stats and nD for all default players so they appear even if they haven't played yet
     DEFAULTS.forEach(n => {
         let name = getDisplayName(n);
-        stats[name] = { tours: 0, buyins: 0, addons: 0, kills: 0, cost: 0, rank1: 0, rank2: 0, rank3: 0, revenue: 0, profit: 0, prize1: 0, prize2: 0, prize3: 0 };
+        stats[name] = { tours: 0, buyins: 0, addons: 0, kills: 0, cost: 0, rank1: 0, rank2: 0, rank3: 0, rank4: 0, rank5: 0, revenue: 0, profit: 0, prize1: 0, prize2: 0, prize3: 0, prize4: 0, prize5: 0, btyMoney: 0 };
         nD[name] = 0;
     });
     
@@ -105,12 +105,13 @@ export function calculateOverallStats(startTs = 0, endTs = Number.MAX_SAFE_INTEG
             let pName = getDisplayName(p.name);
 
             if(!stats[pName]) {
-                stats[pName] = { tours: 0, buyins: 0, addons: 0, kills: 0, cost: 0, rank1: 0, rank2: 0, rank3: 0, revenue: 0, profit: 0, prize1: 0, prize2: 0, prize3: 0 };
+                stats[pName] = { tours: 0, buyins: 0, addons: 0, kills: 0, cost: 0, rank1: 0, rank2: 0, rank3: 0, rank4: 0, rank5: 0, revenue: 0, profit: 0, prize1: 0, prize2: 0, prize3: 0, prize4: 0, prize5: 0, btyMoney: 0 };
             }
             stats[pName].tours += 1;
             stats[pName].buyins += p.buy;
             stats[pName].addons += p.add || 0;
             stats[pName].kills += p.bty || 0;
+            stats[pName].btyMoney += (p.bty || 0) * CFG.BTY;
             
             // Legacy cost calculation rule for exact backward compatibility with old stats
             let matchCost = p.buy * (m.matchNumber >= 41 ? 60000 : 50000) + ((p.add || 0) * CFG.ADDON);
@@ -131,6 +132,8 @@ export function calculateOverallStats(startTs = 0, endTs = Number.MAX_SAFE_INTEG
             if(p.rank === 1) { stats[pName].rank1 += 1; stats[pName].prize1 += pz[0]; }
             if(p.rank === 2) { stats[pName].rank2 += 1; stats[pName].prize2 += pz[1]; }
             if(p.rank === 3) { stats[pName].rank3 += 1; stats[pName].prize3 += pz[2]; }
+            if(p.rank === 4) { stats[pName].rank4 += 1; stats[pName].prize4 += (pz[3] || 0); }
+            if(p.rank === 5) { stats[pName].rank5 += 1; stats[pName].prize5 += (pz[4] || 0); }
 
             // CRITICAL: Respect legacy 'paid' status so cash/debt matches the old app perfectly
             if (p.paid === false || p.paid === undefined) {
