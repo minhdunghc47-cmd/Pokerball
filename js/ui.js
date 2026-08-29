@@ -189,6 +189,12 @@ export function renderStatsAndBank() {
         let sA = stats[a], sB = stats[b];
         if (currentSortMethod === 'profit') return sB.profit - sA.profit;
         if (currentSortMethod === 'roi') {
+            let qualifyA = sA.tours >= 100;
+            let qualifyB = sB.tours >= 100;
+
+            if (qualifyA && !qualifyB) return -1;
+            if (!qualifyA && qualifyB) return 1;
+
             let roiA = sA.cost > 0 ? (sA.profit / sA.cost) : (sA.profit > 0 ? 999 : -999);
             let roiB = sB.cost > 0 ? (sB.profit / sB.cost) : (sB.profit > 0 ? 999 : -999);
             // Tie breaker: profit
