@@ -273,8 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-clear-filter').addEventListener('click', () => {
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
-        document.getElementById('sortMethod').value = 'profit';
-        setSortMethod('profit');
+        document.getElementById('sortMethod').value = 'roi';
+        setSortMethod('roi');
         renderStatsAndBank();
     });
 

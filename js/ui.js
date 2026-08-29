@@ -156,7 +156,7 @@ export function renderHistory() {
         </div>`).join('');
 }
 
-export let currentSortMethod = 'profit';
+export let currentSortMethod = 'roi';
 
 export function setSortMethod(method) {
     currentSortMethod = method;
