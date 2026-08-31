@@ -19,7 +19,8 @@ export const MIGRATION_MAP = {
     'Quân': 'Lục ka “Q”',
     'Dũng': 'Cốc',
     'Hoàng': 'Ly',
-    'Tít': 'tít'
+    'Tít': 'tít',
+    'Hiếu PC': 'Hiếu'
 };
 
 export function getDisplayName(oldName) {
