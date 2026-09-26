@@ -14,6 +14,9 @@ export function increaseFundTxLimit() {
 
 export function renderPlayers() {
     const state = getState();
+    const summary = calculateMatchSummary(state.players);
+    const prizeCount = summary.prizes.length;
+
     const container = document.getElementById('playerList');
     if (!container) return;
 
@@ -21,13 +24,13 @@ export function renderPlayers() {
         <div class="glass-card rounded-2xl p-4 space-y-3 shadow-lg">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${p.rank==1?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30':p.rank==2?'bg-slate-300 text-black':p.rank==3?'bg-orange-800 text-white':p.rank==4?'bg-emerald-600 text-white':p.rank==5?'bg-emerald-800 text-white':'bg-emerald-900 text-emerald-500 border border-emerald-800'}">${p.rank||'#'}</div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${p.rank==1?'bg-yellow-500 text-black shadow-lg shadow-yellow-500/30':p.rank==2?'bg-slate-300 text-black':p.rank==3?'bg-orange-800 text-white':p.rank==4?'bg-emerald-600 text-white':p.rank==5?'bg-emerald-800 text-white':p.rank>5?'bg-emerald-900 text-emerald-500 border border-emerald-800':'bg-emerald-900 text-emerald-500 border border-emerald-800'}">${p.rank||'#'}</div>
                     <span class="font-black text-slate-100 text-base">${getDisplayName(p.name)}</span>
                 </div>
                 <button data-action="delete-player" data-id="${p.id}" class="text-slate-600 hover:text-red-500 p-2 transition-colors"><i class="ph-bold ph-trash text-lg"></i></button>
             </div>
-            <div class="grid grid-cols-${state.players.reduce((s,x)=>s+x.buy+x.add,0)>=25 ? 5 : state.players.reduce((s,x)=>s+x.buy+x.add,0)>=20 ? 4 : 3} gap-2">
-                ${Array.from({length: state.players.reduce((s,x)=>s+x.buy+x.add,0)>=25 ? 5 : state.players.reduce((s,x)=>s+x.buy+x.add,0)>=20 ? 4 : 3}, (_,i)=>i+1).map(r => `<button data-action="set-rank" data-id="${p.id}" data-rank="${r}" class="py-2 rounded-xl text-[9px] font-black border transition-all ${p.rank==r?'bg-slate-200 text-black border-white shadow-md':'bg-emerald-900 text-emerald-500 border-emerald-800 hover:bg-emerald-800'}">GIẢI ${r}</button>`).join('')}
+            <div class="flex flex-wrap gap-2">
+                ${Array.from({length: prizeCount}, (_,i)=>i+1).map(r => `<button data-action="set-rank" data-id="${p.id}" data-rank="${r}" class="flex-1 min-w-[50px] py-2 rounded-xl text-[9px] font-black border transition-all ${p.rank==r?'bg-slate-200 text-black border-white shadow-md':'bg-emerald-900 text-emerald-500 border-emerald-800 hover:bg-emerald-800'}">GIẢI ${r}</button>`).join('')}
             </div>
             <div class="grid grid-cols-3 gap-2">
                 ${[['buy','B-IN','text-amber-500'],['add','A-ON','text-blue-400'],['bty','KILLS','text-emerald-400']].map(([f,l,c]) => `
