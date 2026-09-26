@@ -65,8 +65,8 @@ export function renderMatchSummary() {
                 </div>
             </div>
             <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-2">
-                <span>Giải (${summary.prizes.length === 5 ? 'Nhất/Nhì/Ba/Tư/Năm' : summary.prizes.length === 4 ? 'Nhất/Nhì/Ba/Tư' : 'Nhất/Nhì/Ba'})</span>
-                <span class="text-xs font-black text-amber-400">${summary.prizes.map(p => fmt(p)).join(' / ')}</span>
+                <span>Giải (${summary.prizes.length})</span>
+                <span class="text-xs font-black text-amber-400 text-right w-2/3 break-words">${summary.prizes.map(p => fmt(p)).join(' / ')}</span>
             </div>
             <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase">
                 <span>Trích quỹ (Rake)</span>
@@ -126,11 +126,7 @@ export function renderHistory() {
                 </div>
                 <div class="flex flex-col gap-2 text-right">
                     <span class="text-emerald-500 uppercase">Prize Pool: <span class="text-orange-400 text-xs">${fmt(h.prizePool)}</span></span>
-                    <span class="text-emerald-400 uppercase">G1: <span class="text-yellow-500 text-xs">${fmt(h.prizes[0]||0)}</span></span>
-                    <span class="text-emerald-400 uppercase">G2: <span class="text-emerald-100 text-xs">${fmt(h.prizes[1]||0)}</span></span>
-                    <span class="text-emerald-400 uppercase">G3: <span class="text-orange-700 text-xs">${fmt(h.prizes[2]||0)}</span></span>
-                    ${h.prizes[3] ? `<span class="text-emerald-400 uppercase">G4: <span class="text-emerald-400 text-xs">${fmt(h.prizes[3])}</span></span>` : ''}
-                    ${h.prizes[4] ? `<span class="text-emerald-400 uppercase">G5: <span class="text-emerald-400 text-xs">${fmt(h.prizes[4])}</span></span>` : ''}
+                    ${h.prizes.map((pz, idx) => `<span class="text-emerald-400 uppercase">G${idx+1}: <span class="text-yellow-500 text-xs">${fmt(pz)}</span></span>`).join('')}
                 </div>
             </div>
 
@@ -138,10 +134,11 @@ export function renderHistory() {
                 ${h.players.map(p => {
                     let rankBadge = '';
                     if(p.rank === 1) rankBadge = '<span class="bg-yellow-500 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 shadow-md font-black">NHẤT</span>';
-                    if(p.rank === 2) rankBadge = '<span class="bg-slate-300 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">NHÌ</span>';
-                    if(p.rank === 3) rankBadge = '<span class="bg-orange-800 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">BA</span>';
-                    if(p.rank === 4) rankBadge = '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-500">TƯ</span>';
-                    if(p.rank === 5) rankBadge = '<span class="bg-emerald-800 text-emerald-400 px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-600">NĂM</span>';
+                    else if(p.rank === 2) rankBadge = '<span class="bg-slate-300 text-black px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">NHÌ</span>';
+                    else if(p.rank === 3) rankBadge = '<span class="bg-orange-800 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black">BA</span>';
+                    else if(p.rank === 4) rankBadge = '<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-500">TƯ</span>';
+                    else if(p.rank === 5) rankBadge = '<span class="bg-emerald-800 text-emerald-400 px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-600">NĂM</span>';
+                    else if(p.rank > 5) rankBadge = `<span class="bg-emerald-900 text-emerald-500 px-1.5 py-0.5 rounded text-[8px] ml-1.5 font-black border border-emerald-800">TOP ${p.rank}</span>`;
                     
                     return `
                     <div class="flex justify-between text-xs items-center py-2 border-b border-emerald-800/30 last:border-0">
@@ -202,8 +199,8 @@ export function renderStatsAndBank() {
             return roiB - roiA;
         }
         if (currentSortMethod === 'itm') {
-            let itmA = sA.tours > 0 ? ((sA.rank1 + sA.rank2 + sA.rank3) / sA.tours) : 0;
-            let itmB = sB.tours > 0 ? ((sB.rank1 + sB.rank2 + sB.rank3) / sB.tours) : 0;
+            let itmA = sA.tours > 0 ? ((sA.itm || 0) / sA.tours) : 0;
+            let itmB = sB.tours > 0 ? ((sB.itm || 0) / sB.tours) : 0;
             if (itmB === itmA) return sB.profit - sA.profit;
             return itmB - itmA;
         }
@@ -214,7 +211,7 @@ export function renderStatsAndBank() {
         return sB.profit - sA.profit;
     }).map(n => {
         let s = stats[n];
-        let winRate = s.tours > 0 ? (((s.rank1 + s.rank2 + s.rank3) / s.tours) * 100).toFixed(1) : 0;
+        let winRate = s.tours > 0 ? (((s.itm || 0) / s.tours) * 100).toFixed(1) : 0;
         let roi = s.cost > 0 ? ((s.profit / s.cost) * 100).toFixed(1) : 0;
         return `
         <div class="glass-card rounded-2xl p-5 mb-4 border-l-4 ${s.profit >= 0 ? 'border-emerald-500' : 'border-red-500'} bg-emerald-900/40">

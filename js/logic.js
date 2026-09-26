@@ -1,4 +1,4 @@
-import { CFG, getDisplayName, DEFAULTS } from './config.js';
+import { CFG, getDisplayName, DEFAULTS, PAYOUT_STRUCTURE } from './config.js';
 import { getState, setState } from './state.js';
 
 export function calculateMatchSummary(players) {
@@ -21,24 +21,12 @@ export function calculateMatchSummary(players) {
     let totalBuyinCount = b + a;
     let prizes = [];
     
-    // Dynamic Payout (Bubble Protection)
-    if (totalBuyinCount < 20) {
-        // Bàn đánh êm: Chỉ chia Top 3
-        prizes = CFG.PRIZES.map(v => prizePool * v);
-    } else if (totalBuyinCount >= 20 && totalBuyinCount < 25) {
-        // Bàn đánh rát: Hoàn 1 Buy-in cho Hạng 4, phần còn lại chia Top 3
-        let bubblePrize = CFG.BUYIN;
-        let remainingPool = prizePool - bubblePrize;
-        prizes = CFG.PRIZES.map(v => remainingPool * v);
-        prizes.push(bubblePrize);
-    } else {
-        // Bàn đẫm máu (>= 25 Buy-in): Hoàn 1 Buy-in cho Hạng 4 và Hạng 5, phần còn lại chia Top 3
-        let bubblePrize = CFG.BUYIN;
-        let remainingPool = prizePool - (bubblePrize * 2);
-        prizes = CFG.PRIZES.map(v => remainingPool * v);
-        prizes.push(bubblePrize); // Hạng 4
-        prizes.push(bubblePrize); // Hạng 5
+    // ITM 15% Payout Logic based on Entries (totalBuyinCount)
+    let structure = PAYOUT_STRUCTURE.find(s => totalBuyinCount >= s.min && totalBuyinCount <= s.max);
+    if (!structure) {
+        structure = PAYOUT_STRUCTURE[0];
     }
+    prizes = structure.payouts.map(v => prizePool * v);
 
     const activePlayers = players.filter(p => p.buy > 0);
     const payList = activePlayers.map(p => {
@@ -134,6 +122,7 @@ export function calculateOverallStats(startTs = 0, endTs = Number.MAX_SAFE_INTEG
             if(p.rank === 3) { stats[pName].rank3 += 1; stats[pName].prize3 += pz[2]; }
             if(p.rank === 4) { stats[pName].rank4 += 1; stats[pName].prize4 += (pz[3] || 0); }
             if(p.rank === 5) { stats[pName].rank5 += 1; stats[pName].prize5 += (pz[4] || 0); }
+            if(p.rank > 0 && pz[p.rank - 1] > 0) { stats[pName].itm = (stats[pName].itm || 0) + 1; }
 
             // CRITICAL: Respect legacy 'paid' status so cash/debt matches the old app perfectly
             if (p.paid === false || p.paid === undefined) {
