@@ -38,7 +38,27 @@ export const MIGRATION_MAP = {
 };
 
 export function getDisplayName(oldName) {
-    return MIGRATION_MAP[oldName] || oldName;
+    if (!oldName) return '';
+    let tName = oldName.trim();
+    
+    // 1. Direct hit in migration map
+    if (MIGRATION_MAP[tName]) return MIGRATION_MAP[tName];
+    
+    let lowerName = tName.toLowerCase();
+    
+    // 2. Case-insensitive check against DEFAULTS and mapped targets
+    const knownNames = [...new Set([...DEFAULTS, ...Object.values(MIGRATION_MAP)])];
+    for (let known of knownNames) {
+        if (known.toLowerCase() === lowerName) return known;
+    }
+    
+    // 3. Case-insensitive check against migration keys
+    for (let key in MIGRATION_MAP) {
+        if (key.toLowerCase() === lowerName) return MIGRATION_MAP[key];
+    }
+    
+    // 4. If completely unknown, normalize to Title Case so "phong" and "PHONG" become "Phong"
+    return tName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 }
 
 export const FIREBASE_URL = 'https://lcl-v1-default-rtdb.asia-southeast1.firebasedatabase.app';
