@@ -31,6 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Connect Firebase
     initFirebaseRealtime();
 
+    document.getElementById('playerList').addEventListener('change', (e) => {
+        const select = e.target.closest('select');
+        if (!select) return;
+        
+        const action = select.getAttribute('data-action');
+        const id = parseInt(select.getAttribute('data-id'));
+        
+        if (action === 'select-rank') {
+            const rank = parseInt(select.value);
+            setPlayerRank(id, rank); // The UI toggle logic in setPlayerRank toggles it to 0 if same, but here it sets the exact value. Wait, `setPlayerRank` toggles it! We need to make sure `setPlayerRank` sets it directly for selects. Let's look at setPlayerRank.
+            syncToCloud();
+        }
+    });
+
     // Event Delegation for dynamically rendered buttons (Players list)
     document.getElementById('playerList').addEventListener('click', (e) => {
         const btn = e.target.closest('button');
@@ -46,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
             syncToCloud();
         } else if (action === 'set-rank') {
             const rank = parseInt(btn.getAttribute('data-rank'));
-            setPlayerRank(id, rank);
+            setPlayerRank(id, rank, true); // Added true for toggle
             syncToCloud();
         } else if (action === 'delete-player') {
             Swal.fire({

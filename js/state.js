@@ -52,12 +52,12 @@ export function updatePlayer(id, field, value) {
     }
 }
 
-export function setPlayerRank(id, rank) {
+export function setPlayerRank(id, rank, toggle = false) {
     const newState = { ...state };
     newState.players.forEach(p => {
         if (p.id === id) {
-            p.rank = p.rank === rank ? 0 : rank;
-        } else if (p.rank === rank) {
+            p.rank = toggle ? (p.rank === rank ? 0 : rank) : rank;
+        } else if (rank !== 0 && p.rank === rank) {
             p.rank = 0; // Clear other player's rank if assigned
         }
     });

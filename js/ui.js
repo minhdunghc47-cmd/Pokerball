@@ -29,10 +29,7 @@ export function renderPlayers() {
                 </div>
                 <button data-action="delete-player" data-id="${p.id}" class="text-slate-600 hover:text-red-500 p-2 transition-colors"><i class="ph-bold ph-trash text-lg"></i></button>
             </div>
-            <div class="flex flex-wrap gap-2">
-                ${Array.from({length: prizeCount}, (_,i)=>i+1).map(r => `<button data-action="set-rank" data-id="${p.id}" data-rank="${r}" class="flex-1 min-w-[50px] py-2 rounded-xl text-[9px] font-black border transition-all ${p.rank==r?'bg-slate-200 text-black border-white shadow-md':'bg-emerald-900 text-emerald-500 border-emerald-800 hover:bg-emerald-800'}">GIẢI ${r}</button>`).join('')}
-            </div>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-4 gap-2">
                 ${[['buy','B-IN','text-amber-500'],['add','A-ON','text-blue-400'],['bty','KILLS','text-emerald-400']].map(([f,l,c]) => `
                     <div class="bg-emerald-950/50 p-2 rounded-2xl border border-emerald-800 flex flex-col items-center">
                         <span class="text-[8px] font-black text-emerald-500 uppercase mb-1">${l}</span>
@@ -42,6 +39,13 @@ export function renderPlayers() {
                             <button data-action="upd-player" data-id="${p.id}" data-field="${f}" data-val="1" class="text-emerald-100 font-bold w-6 h-6 flex items-center justify-center btn-press rounded bg-emerald-800 hover:bg-emerald-700 transition-colors">+</button>
                         </div>
                     </div>`).join('')}
+                <div class="bg-emerald-950/50 p-2 rounded-2xl border border-emerald-800 flex flex-col items-center justify-between">
+                    <span class="text-[8px] font-black text-emerald-500 uppercase mb-1">TOP (HẠNG)</span>
+                    <select data-action="select-rank" data-id="${p.id}" class="w-full h-8 bg-emerald-900 text-emerald-100 font-black text-center text-sm rounded-lg border border-emerald-700 outline-none appearance-none cursor-pointer">
+                        <option value="0" ${!p.rank ? 'selected' : ''}>- Trống -</option>
+                        ${Array.from({length: prizeCount}, (_,i)=>i+1).map(r => `<option value="${r}" ${p.rank==r ? 'selected' : ''}>TOP ${r}</option>`).join('')}
+                    </select>
+                </div>
             </div>
         </div>`).join('');
 }
